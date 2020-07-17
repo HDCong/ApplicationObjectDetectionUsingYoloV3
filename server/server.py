@@ -15,7 +15,7 @@ from PIL import Image
 
 # construct the argument parse and parse the arguments
 
-confthres = 0.4
+confthres = 0.7
 nmsthres = 0.6
 yolo_path = '.'
 
@@ -96,6 +96,7 @@ def get_prediction(image,net,LABELS,COLORS):
 
     # apply non-maxima suppression to suppress weak, overlapping bounding
     # boxes
+
     idxs = cv2.dnn.NMSBoxes(boxes, confidences, confthres,
                             nmsthres)
     if len(idxs) > 0:
@@ -109,8 +110,28 @@ def get_prediction(image,net,LABELS,COLORS):
             color = [int(c) for c in COLORS[classIDs[i]]]
             cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
             text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
-            
-            cv2.putText(image, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX,0.5, color, 2)
+            print(text)
+            fontScale = (w * h) / (W * H) # Would work best for almost square images
+            thick=2
+            print(W,H)
+            print(w,h)
+            if W< 1000 or H <1000:
+                fontScale=1
+                thick=1
+            # 2000
+            elif W< 2000 or H <2000:
+                fontScale=3
+                thick=3
+            # 4000
+            elif(H <3000 or W<3000):
+                fontScale=5
+                thick= 5
+            else:
+                fontScale=7
+                thick=5
+            # print(w)
+            # print(h)
+            cv2.putText(image, text, (x, y+int(h/2) ), cv2.FONT_HERSHEY_TRIPLEX,fontScale, color, thick)
     return image
 
 

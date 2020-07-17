@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -7,9 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:async/async.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:intl/intl.dart';
-import 'package:mime/mime.dart';
 
 void main() {
   runApp(MyApp());
@@ -40,8 +36,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
   ProgressDialog pr;
   Uint8List _base64;
 
-
-  Uri apiUrl = Uri.parse("http://10.0.2.2:8558/detection");
+//  Uri apiUrl = Uri.parse("http://10.0.2.2:8558/detection");
+  Uri apiUrl = Uri.parse("http://192.168.1.3:8558/detection");
 
   void _openGallery(BuildContext context) async {
     var pickedImage = await ImagePicker.pickImage(source: ImageSource.gallery);
@@ -72,7 +68,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
         new http.MultipartFile('image', stream, length, filename: 'image');
     imageUploadRequest.files.add(multipartFile);
 
-
     final http.StreamedResponse response = await imageUploadRequest.send();
     print('statusCode => ${response.statusCode}');
 
@@ -80,12 +75,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
     print(response.headers);
     await response.stream.toBytes().then((value) {
       setState(() {
-        _base64=value;
+        _base64 = value;
       });
       pr.hide();
-
     });
-
   }
 
   Future<void> _showChoiceDiaglog(BuildContext context) {
@@ -168,7 +161,12 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 },
                 child: Text("Detect"),
               ),
-              if(_base64!=null) new Image.memory(_base64),
+              if (_base64 != null)
+                new Image.memory(
+                  _base64,
+                  width: 400,
+                  height: 400,
+                ),
             ],
           ),
         ),
