@@ -25,7 +25,7 @@ def get_labels(labels_path):
     return LABELS
 
 def get_colors(LABELS):
-    np.random.seed(42)
+    np.random.seed(20)
     COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),dtype="uint8")
     return COLORS
 
@@ -111,27 +111,9 @@ def get_prediction(image,net,LABELS,COLORS):
             cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
             text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
             print(text)
-            fontScale = (w * h) / (W * H) # Would work best for almost square images
-            thick=2
-            print(W,H)
-            print(w,h)
-            if W< 1000 or H <1000:
-                fontScale=1
-                thick=1
-            # 2000
-            elif W< 2000 or H <2000:
-                fontScale=3
-                thick=3
-            # 4000
-            elif(H <3000 or W<3000):
-                fontScale=5
-                thick= 5
-            else:
-                fontScale=7
-                thick=5
-            # print(w)
-            # print(h)
-            cv2.putText(image, text, (x, y+int(h/2) ), cv2.FONT_HERSHEY_TRIPLEX,fontScale, color, thick)
+            fontScale =1 # Would work best for almost square images
+            thick=1
+            cv2.putText(image, text, (x, y+int(h/15) ), cv2.FONT_HERSHEY_TRIPLEX,fontScale, color, thick)
     return image
 
 
@@ -143,12 +125,26 @@ CFG=get_config(cfgpath)
 Weights=get_weights(wpath)
 nets=load_model(CFG,Weights)
 Colors=get_colors(Lables)
+
+###### My custom
+
+custom_labelsPath="coco4classes.names"
+cfgpath="yolov3_custom_4classes.cfg"
+custom_wpath="yolov3_custom_4classes_10000.weights"
+custom_Lables=get_labels(custom_labelsPath)
+CFG=get_config(cfgpath)
+custom_Weights=get_weights(custom_wpath)
+custom_nets=load_model(CFG,custom_Weights)
+custom_Colors=get_colors(custom_Lables)
+
+
 # Initialize the Flask application
 app = Flask(__name__)
 
 # route http posts to this method
 @app.route('/detection', methods=['POST'])
 def main():
+    print('Detection')
 
     # load our input image and grab its spatial dimensions
     img = request.files["image"].read();
@@ -159,6 +155,32 @@ def main():
     image=np_img.copy()
     image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
     res=get_prediction(image,nets,Lables,Colors)
+
+    image=cv2.cvtColor(res,cv2.COLOR_BGR2RGB)
+    np_img=Image.fromarray(image)
+    # print(type(np_img))
+    # img_encoded=image_to_byte_array(np_img)
+
+    buffered = BytesIO()
+    np_img.save(buffered, format="JPEG")
+    # img_str = base64.b64encode(buffered.getvalue())
+    
+    my_encoded_img = buffered.getvalue()
+
+    return Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+
+@app.route('/custom', methods=['POST'])
+def main2():
+    print('Custom')
+    # load our input image and grab its spatial dimensions
+    img = request.files["image"].read();
+    img = Image.open(io.BytesIO(img))
+
+    np_img=np.array(img)
+    
+    image=np_img.copy()
+    image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+    res=get_prediction(image,custom_nets,custom_Lables,custom_Colors)
 
     image=cv2.cvtColor(res,cv2.COLOR_BGR2RGB)
     np_img=Image.fromarray(image)
