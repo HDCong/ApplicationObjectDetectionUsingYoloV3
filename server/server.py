@@ -3,6 +3,7 @@ import argparse
 import time
 import cv2
 import os
+from bounding_box import bounding_box as bb
 from flask import Flask, request, Response, jsonify
 import jsonpickle
 #import binascii
@@ -17,31 +18,28 @@ from PIL import Image
 
 confthres = 0.7
 nmsthres = 0.6
-yolo_path = '.'
+
 
 def get_labels(labels_path):
-    lpath=os.path.sep.join([yolo_path, labels_path])
-    LABELS = open(lpath).read().strip().split("\n")
+    # lpath=os.path.sep.join([yolo_path, labels_path])
+    LABELS = open(labels_path).read().strip().split("\n")
     return LABELS
 
 def get_colors(LABELS):
     np.random.seed(20)
-    COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),dtype="uint8")
+    color =['navy', 'blue', 'aqua', 'teal', 'olive',
+     'green', 'lime', 'yellow', 'orange', 'red', 'maroon', 
+     'fuchsia', 'purple', 'black', 'gray' ,'silver']
+    
+    COLORS =[]
+    for x in range(len(LABELS)):
+        COLORS.append(color[x%len(color)])
     return COLORS
-
-def get_weights(weights_path):
-    weightsPath = os.path.sep.join([yolo_path, weights_path])
-    return weightsPath
-
-def get_config(config_path):
-    configPath = os.path.sep.join([yolo_path, config_path])
-    return configPath
 
 def load_model(configpath,weightspath):
     print("[INFO] loading YOLO from disk...")
     net = cv2.dnn.readNetFromDarknet(configpath, weightspath)
     return net
-
 
 def image_to_byte_array(image:Image):
   imgByteArr = io.BytesIO()
@@ -49,8 +47,8 @@ def image_to_byte_array(image:Image):
   imgByteArr = imgByteArr.getvalue()
   return imgByteArr
 
-
 def get_prediction(image,net,LABELS,COLORS):
+
     (H, W) = image.shape[:2]
     ln = net.getLayerNames()
     ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
@@ -69,7 +67,6 @@ def get_prediction(image,net,LABELS,COLORS):
     boxes = []
     confidences = []
     classIDs = []
-
     # loop over each of the layer outputs
     for output in layerOutputs:
         # loop over each of the detections
@@ -105,38 +102,26 @@ def get_prediction(image,net,LABELS,COLORS):
             # extract the bounding box coordinates
             (x, y) = (boxes[i][0], boxes[i][1])
             (w, h) = (boxes[i][2], boxes[i][3])
-
-            # draw a bounding box rectangle and label on the image
-            color = [int(c) for c in COLORS[classIDs[i]]]
-            cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
             text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
-            print(text)
-            fontScale =1 # Would work best for almost square images
-            thick=1
-            cv2.putText(image, text, (x, y+int(h/15) ), cv2.FONT_HERSHEY_TRIPLEX,fontScale, color, thick)
-    return image
+            bb.add(image,x,y,x+w,y+h,text,COLORS[classIDs[i]])
+    listClassne =','.join([str(n) for n in classIDs])
+    print(len(listClassne))
+    return image, listClassne
 
-
-labelsPath="coco.names"
-cfgpath="yolov3.cfg"
-wpath="yolov3.weights"
+labelsPath="./coco.names"
+cfgpath="./yolov3.cfg"
+wpath="./yolov3.weights"
 Lables=get_labels(labelsPath)
-CFG=get_config(cfgpath)
-Weights=get_weights(wpath)
-nets=load_model(CFG,Weights)
+nets=load_model(cfgpath,wpath)
 Colors=get_colors(Lables)
-
 ###### My custom
 
-custom_labelsPath="coco4classes.names"
-cfgpath="yolov3_custom_4classes.cfg"
-custom_wpath="yolov3_custom_4classes_10000.weights"
+custom_labelsPath="./coco4classes.names"
+cfgpath="./yolov3_custom_4classes.cfg"
+custom_wpath="./yolov3_custom_4classes_10000.weights"
 custom_Lables=get_labels(custom_labelsPath)
-CFG=get_config(cfgpath)
-custom_Weights=get_weights(custom_wpath)
-custom_nets=load_model(CFG,custom_Weights)
+custom_nets=load_model(cfgpath,custom_wpath)
 custom_Colors=get_colors(custom_Lables)
-
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -154,20 +139,18 @@ def main():
     
     image=np_img.copy()
     image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-    res=get_prediction(image,nets,Lables,Colors)
+    res, listIndex=get_prediction(image,nets,Lables,Colors)
 
     image=cv2.cvtColor(res,cv2.COLOR_BGR2RGB)
     np_img=Image.fromarray(image)
-    # print(type(np_img))
-    # img_encoded=image_to_byte_array(np_img)
-
     buffered = BytesIO()
     np_img.save(buffered, format="JPEG")
     # img_str = base64.b64encode(buffered.getvalue())
     
     my_encoded_img = buffered.getvalue()
-
-    return Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+    response.headers["listIndex"]= listIndex
+    return response
 
 @app.route('/custom', methods=['POST'])
 def main2():
@@ -180,21 +163,20 @@ def main2():
     
     image=np_img.copy()
     image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-    res=get_prediction(image,custom_nets,custom_Lables,custom_Colors)
+    res, listIndex=get_prediction(image,custom_nets,custom_Lables,custom_Colors)
 
     image=cv2.cvtColor(res,cv2.COLOR_BGR2RGB)
     np_img=Image.fromarray(image)
-    # print(type(np_img))
-    # img_encoded=image_to_byte_array(np_img)
-
+    
+    
     buffered = BytesIO()
     np_img.save(buffered, format="JPEG")
-    # img_str = base64.b64encode(buffered.getvalue())
+
     
     my_encoded_img = buffered.getvalue()
-
-    return Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
-
+    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+    response.headers["listIndex"]=listIndex
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0',port=8558)

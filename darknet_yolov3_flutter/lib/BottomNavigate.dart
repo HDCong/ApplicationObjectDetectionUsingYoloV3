@@ -1,6 +1,5 @@
 import 'package:darknetyolov3/DefaultModel.dart';
 import 'package:darknetyolov3/MySlider.dart';
-import 'package:darknetyolov3/slider.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -31,7 +30,7 @@ class _FancyBottomBarPageState extends State<FancyBottomBarPage> {
         controller: pageController,
         children: <Widget>[
           MySliderSign(),
-          HomePageScreen(),
+          DefautModelScreen(),
         ],
       ),
       bottomNavigationBar: StreamBuilder<Object>(

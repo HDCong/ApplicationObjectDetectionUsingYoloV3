@@ -8,16 +8,16 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:async/async.dart';
 import 'package:photo_view/photo_view.dart';
 
-class HomePageScreen extends StatefulWidget {
+class DefautModelScreen extends StatefulWidget {
   @override
-  _HomePageScreenState createState() => _HomePageScreenState();
+  _DefautModelScreenState createState() => _DefautModelScreenState();
 }
 
-class _HomePageScreenState extends State<HomePageScreen> {
+class _DefautModelScreenState extends State<DefautModelScreen> {
   File _imageFile;
   ProgressDialog pr;
   Uint8List _base64;
-  static String _mIP = "http://192.168.1.12:8558/";
+  static String _mIP = "http://192.168.1.4:8558/";
 
 //  Uri apiUrl = Uri.parse("http://10.0.2.2:8558/detection");
 //  Uri apiUrlCustom = Uri.parse(_mIP + "custom");
@@ -57,9 +57,13 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
     final http.StreamedResponse response = await imageUploadRequest.send();
     print('statusCode => ${response.statusCode}');
+    print('Header: ');
 
 //     listen for response
-    print(response.headers);
+    List<String > contentHeader =response.headers.values.toList();
+    // Index of object
+    print(contentHeader[2]);
+
     await response.stream.toBytes().then((value) {
       setState(() {
         _base64 = value;

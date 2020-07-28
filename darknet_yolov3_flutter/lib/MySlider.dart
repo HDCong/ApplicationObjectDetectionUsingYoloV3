@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:darknetyolov3/SignDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -9,9 +11,8 @@ import 'package:async/async.dart';
 import 'package:photo_view/photo_view.dart';
 
 import 'package:flutter_swiper/flutter_swiper.dart';
-import 'package:darknetyolov3/slider/assets.dart';
-
-import 'package:search_widget/search_widget.dart';
+import 'package:darknetyolov3/assets.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 
 class MySliderSign extends StatefulWidget {
   @override
@@ -20,24 +21,32 @@ class MySliderSign extends StatefulWidget {
 
 class _MySliderSignState extends State<MySliderSign> {
   final List<String> images = imgSignLink;
-
   final List<String> contentImgs = imgSignContent;
+  List<SignDetail> _signDetails;
 
   SwiperController _controller;
-
+  List<int> _indexObjectDetected;
   File _imageFile;
   ProgressDialog pr;
   Uint8List _base64;
   bool hasSolution;
-  static String _mIP = "http://192.168.1.12:8558/";
+  static String _mIP = "http://192.168.1.4:8558/";
   Uri apiUrlCustom = Uri.parse(_mIP + "custom");
   Uri apiUrl = Uri.parse(_mIP + "detection");
   TextEditingController numberController = new TextEditingController();
 
+  void intiForSignDetails() {
+    _signDetails = new List<SignDetail>();
+    for (int i = 0; i < imgSignLink.length; i++)
+      _signDetails.add(new SignDetail(i, imgSignLink[i], imgSignContent[i]));
+  }
+
   @override
   void initState() {
+    _indexObjectDetected = new List<int>();
     _controller = new SwiperController();
     hasSolution = false;
+    intiForSignDetails();
     pr = new ProgressDialog(context, type: ProgressDialogType.Normal);
 
     //Optional
@@ -94,6 +103,46 @@ class _MySliderSignState extends State<MySliderSign> {
     );
   }
 
+  Widget _buildItem2(BuildContext context, int index) {
+    return Column(
+      children: <Widget>[
+        Container(
+          height: 200,
+          width: double.infinity,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [Colors.grey, Colors.lightBlue]),
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(10.0),
+                  topRight: Radius.circular(10.0)),
+              image: DecorationImage(
+                  image: NetworkImage(images[_indexObjectDetected[index]]),
+                  scale: 0.5)),
+        ),
+        Expanded(
+          flex: 1,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(10.0),
+                      bottomRight: Radius.circular(10.0))),
+              child: ListTile(
+                title: Text('Biển số: ' +
+                    _getNameSign(imgSignLink[_indexObjectDetected[index]])),
+                subtitle: Text(contentImgs[_indexObjectDetected[index]]),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSwipe() {
     return Swiper(
       itemBuilder: _buildItem,
@@ -107,12 +156,43 @@ class _MySliderSignState extends State<MySliderSign> {
     );
   }
 
-  Widget _showInformationAfterDetected() {
-    if (hasSolution)
-      return Container();
-    else {
-      Container();
-    }
+  Widget _buildSwipe2() {
+    if (_indexObjectDetected.length < 1) return Container();
+//    return Column(children: <Widget>[
+    return Swiper(
+      itemBuilder: _buildItem2,
+      itemCount: _indexObjectDetected.length,
+      scale: 0.9,
+      layout: SwiperLayout.DEFAULT,
+      itemHeight: 300,
+      itemWidth: 300,
+//      controller: _controller,
+      fade: 0.5,
+      pagination: new SwiperPagination(),
+    );
+//    ]);
+  }
+
+  Widget _customPopupItem(
+      BuildContext context, SignDetail item, bool isSelected) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      decoration: !isSelected
+          ? null
+          : BoxDecoration(
+              border: Border.all(color: Theme.of(context).primaryColor),
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.white,
+            ),
+      child: ListTile(
+        selected: isSelected,
+        title: Text("Biển số " + _getNameSign(item.mLink)),
+        subtitle: Text(item.mContent),
+        leading: CircleAvatar(
+          backgroundImage: NetworkImage(item.mLink),
+        ),
+      ),
+    );
   }
 
   @override
@@ -124,41 +204,91 @@ class _MySliderSignState extends State<MySliderSign> {
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            SizedBox(height: 30.0),
-            Column(children: <Widget>[
-              RaisedButton(
-                onPressed: () {
-                  _showChoiceDiaglog(context);
-                },
-                child: Text("Select Image"),
-              ),
-              _decideImage(base: _base64),
-              RaisedButton(
-                onPressed: () {
-                  _makePostRequest(context, _imageFile);
-                  setState(() {
-                    print('helo');
-                  });
-                },
-                child: Text("Detect"),
-              ),
-            ]),
-            SizedBox(height: 30.0),
+            SizedBox(height: 40.0),
+            if (_imageFile != null)
+              Column(children: <Widget>[
+                _decideImage(base: _base64),
+                IconButton(
+                  icon: Icon(Icons.remove_red_eye),
+                  tooltip: 'Detect this traffic sign',
+                  onPressed: () {
+                    _makePostRequest(context, _imageFile);
+                  },
+                ),
+                Text('Detect'),
+                SizedBox(height: 30.0),
+              ]),
             // After has solution
-            hasSolution == false ? Container() : Container(),
+            if (hasSolution && _indexObjectDetected.length > 0)
+              Text(
+                "${_indexObjectDetected.length} traffic sign(s) detected",
+                style: DefaultTextStyle.of(context)
+                    .style
+                    .apply(fontSizeFactor: 1.5),
+              ),
+            hasSolution == false
+                ? Container()
+                : Container(
+                    height: 340,
+                    color: Colors.black12,
+                    padding: EdgeInsets.all(16.0),
+                    child: _buildSwipe2(),
+                  ),
             SizedBox(height: 30.0),
-            RaisedButton(
-              onPressed: () {
-//                var text = numberController.text;
-                var text="24";
-                int val = int.tryParse(text, radix: 10);
-                if (!(val == null || val < 0 || val >= images.length))
-                  setState(() {
-                    _controller.move(val);
-                  });
-              },
-              child: new Text("Update"),
+            Text(
+              "Discovery or Search",
+              style:
+                  DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2.0),
             ),
+            Container(
+              padding: EdgeInsets.all(16.0),
+              child: DropdownSearch<SignDetail>(
+                mode: Mode.BOTTOM_SHEET,
+                maxHeight: 300,
+                items: _signDetails,
+                onChanged: (SignDetail d) {
+                  print(d.index);
+                  _controller.move(d.index);
+                },
+                showSearchBox: true,
+                showSelectedItem: false,
+                popupItemBuilder: _customPopupItem,
+                searchBoxDecoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.fromLTRB(12, 12, 8, 0),
+                  labelText: "Search for sign or content",
+                ),
+                popupTitle: Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColorDark,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Search for traffic sign',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                popupShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                compareFn: (SignDetail i, SignDetail s) => i.isEqual(s),
+                filterFn: (SignDetail i, String filter) => i.isFiltered(filter),
+              ),
+            ),
+            //Swiper here
             Container(
               height: 340,
               color: Colors.black12,
@@ -168,14 +298,26 @@ class _MySliderSignState extends State<MySliderSign> {
           ],
         ),
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(top: 75.0),
+        child: FloatingActionButton(
+            child: Icon(Icons.image),
+            tooltip: 'Select image to detect',
+            onPressed: () {
+              _showChoiceDiaglog(context);
+            }),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      backgroundColor: Colors.black12,
     );
   }
 
   void _openGallery(BuildContext context) async {
     var pickedImage = await ImagePicker.pickImage(source: ImageSource.gallery);
     this.setState(() {
-      _imageFile = pickedImage as File;
+      _imageFile = pickedImage;
       _base64 = null;
+      hasSolution = false;
     });
     Navigator.of(context).pop();
   }
@@ -183,7 +325,8 @@ class _MySliderSignState extends State<MySliderSign> {
   void _openCamera(BuildContext context) async {
     var pickedImage = await ImagePicker.pickImage(source: ImageSource.camera);
     this.setState(() {
-      _imageFile = pickedImage as File;
+      _imageFile = pickedImage;
+      hasSolution = false;
       _base64 = null;
     });
     Navigator.of(context).pop();
@@ -206,7 +349,19 @@ class _MySliderSignState extends State<MySliderSign> {
     print('statusCode => ${response.statusCode}');
 
 //     listen for response
-    print(response.headers);
+    List<String> contentHeader = response.headers.values.toList();
+
+    if (contentHeader[2].length > 0) {
+      List<int> listObject =
+          contentHeader[2].split(',').map(int.parse).toList();
+      _indexObjectDetected = listObject;
+      for (int x in listObject) print(x);
+      hasSolution = true;
+      setState(() {});
+    } else {
+      _indexObjectDetected = new List<int>();
+    }
+
     await response.stream.toBytes().then((value) {
       setState(() {
         _base64 = value;
@@ -215,6 +370,7 @@ class _MySliderSignState extends State<MySliderSign> {
     });
   }
 
+//
   Future<void> _showChoiceDiaglog(BuildContext context) {
     return showDialog(
         context: context,
@@ -244,32 +400,95 @@ class _MySliderSignState extends State<MySliderSign> {
   }
 
   Widget _decideImage({Uint8List base = null}) {
-    if (base != null) {
+//    if (base != null) {
+//      return Container(
+//        color: Colors.white,
+//        width: 400,
+//        height: 400,
+//        child: PhotoView(
+//          imageProvider: new Image.memory(
+//            _base64,
+//            width: 400,
+//            height: 400,
+//          ).image,
+//        ),
+//      );
+//    }
+//    if (_imageFile == null) {
+//      return Text("Your image here");
+//    } else {
+//      return Image.file(
+//        _imageFile,
+//        width: 400,
+//        height: 400,
+//      );
+//    }
+    if (_base64 != null)
       return Container(
-        color: Colors.white,
-        width: 400,
-        height: 400,
-        child: PhotoView(
-          imageProvider: new Image.memory(
-            _base64,
-            width: 400,
+          padding: EdgeInsets.all(16.0),
+          child: Container(
             height: 400,
-          ).image,
-        ),
-      );
-    }
+            width: double.infinity,
+            child: PhotoView(
+              imageProvider: new Image.memory(
+                _base64,
+                width: 400,
+                height: 400,
+              ).image,
+            ),
+          ));
     if (_imageFile == null) {
       return Text("Your image here");
-    } else {
-      return Image.file(
-        _imageFile,
-        width: 400,
-        height: 400,
-      );
     }
+    return Container(
+        padding: EdgeInsets.all(16.0),
+        child: Container(
+          height: 300,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [Colors.grey, Colors.lightBlue]),
+            borderRadius: BorderRadius.circular(10.0),
+            image: DecorationImage(image: FileImage(_imageFile)),
+          ),
+        ));
   }
 
   String _getNameSign(String imgLink) {
     return imgLink.substring(48, imgLink.indexOf(".png"));
+  }
+
+  Future<List<SignDetail>> filterData(String filterz) async {
+    print('filter: ' + filterz);
+    String filter = filterz.toLowerCase();
+    if (filter.length == 0) return _signDetails;
+    List<SignDetail> res = new List<SignDetail>();
+    for (SignDetail signDetail in _signDetails) {
+      if (_getNameSign(signDetail.mLink).toLowerCase().contains(filter) ||
+          signDetail.mContent.toLowerCase().contains(filter))
+        res.add(signDetail);
+    }
+    return res;
+  }
+}
+
+class Detail extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            Text("Detail"),
+          ],
+        ),
+      ),
+    );
   }
 }
