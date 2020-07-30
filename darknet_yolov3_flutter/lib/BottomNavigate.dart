@@ -47,6 +47,7 @@ class _FancyBottomBarPageState extends State<FancyBottomBarPage> {
                 FancyBottomNavigationItem(
                     icon: Icon(Icons.camera_front),
                     title: Text('\t\t\t\tDefaut Model')),
+
               ],
               onItemSelected: (int value) {
                 indexcontroller.add(value);

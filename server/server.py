@@ -13,7 +13,7 @@ from io import BytesIO
 import io
 import json
 from PIL import Image
-
+import urllib.request
 # construct the argument parse and parse the arguments
 
 confthres = 0.7
@@ -21,16 +21,13 @@ nmsthres = 0.6
 
 
 def get_labels(labels_path):
-    # lpath=os.path.sep.join([yolo_path, labels_path])
     LABELS = open(labels_path).read().strip().split("\n")
     return LABELS
 
 def get_colors(LABELS):
-    np.random.seed(20)
     color =['navy', 'blue', 'aqua', 'teal', 'olive',
      'green', 'lime', 'yellow', 'orange', 'red', 'maroon', 
      'fuchsia', 'purple', 'black', 'gray' ,'silver']
-    
     COLORS =[]
     for x in range(len(LABELS)):
         COLORS.append(color[x%len(color)])
@@ -105,7 +102,7 @@ def get_prediction(image,net,LABELS,COLORS):
             text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
             bb.add(image,x,y,x+w,y+h,text,COLORS[classIDs[i]])
     listClassne =','.join([str(n) for n in classIDs])
-    print(len(listClassne))
+    print((listClassne))
     return image, listClassne
 
 labelsPath="./coco.names"
@@ -116,11 +113,11 @@ nets=load_model(cfgpath,wpath)
 Colors=get_colors(Lables)
 ###### My custom
 
-custom_labelsPath="./coco4classes.names"
-cfgpath="./yolov3_custom_4classes.cfg"
-custom_wpath="./yolov3_custom_4classes_10000.weights"
+custom_labelsPath="./obj-2.names"
+custom_cfgpath="./yolov3_custom_sign.cfg"
+custom_wpath="./yolov3_custom_sign_last.weights"
 custom_Lables=get_labels(custom_labelsPath)
-custom_nets=load_model(cfgpath,custom_wpath)
+custom_nets=load_model(custom_cfgpath,custom_wpath)
 custom_Colors=get_colors(custom_Lables)
 
 # Initialize the Flask application
@@ -151,6 +148,35 @@ def main():
     response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
     response.headers["listIndex"]= listIndex
     return response
+@app.route('/detection/url', methods=['POST'])
+def mainUrlDetection():
+    print('Detection by url')
+
+    # load our input image and grab its spatial dimensions
+    # img = request.["image"].read();
+    imgUrl= request.headers['Url']
+
+    urllib.request.urlretrieve(imgUrl, "imgdetect.jpg")
+    img = Image.open("imgdetect.jpg")
+
+    np_img=np.array(img)
+    
+    image=np_img.copy()
+    image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+    res, listIndex=get_prediction(image,nets,Lables,Colors)
+
+    image=cv2.cvtColor(res,cv2.COLOR_BGR2RGB)
+    np_img=Image.fromarray(image)
+    buffered = BytesIO()
+    np_img.save(buffered, format="JPEG")
+    # img_str = base64.b64encode(buffered.getvalue())
+    
+    my_encoded_img = buffered.getvalue()
+    os.remove('imgdetect.jpg')
+    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+    response.headers["listIndex"]= listIndex
+    print(response.headers)
+    return response
 
 @app.route('/custom', methods=['POST'])
 def main2():
@@ -168,11 +194,9 @@ def main2():
     image=cv2.cvtColor(res,cv2.COLOR_BGR2RGB)
     np_img=Image.fromarray(image)
     
-    
     buffered = BytesIO()
     np_img.save(buffered, format="JPEG")
 
-    
     my_encoded_img = buffered.getvalue()
     response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
     response.headers["listIndex"]=listIndex

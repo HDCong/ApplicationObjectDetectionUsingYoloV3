@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:darknetyolov3/SignDetail.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_dialog/progress_dialog.dart';
@@ -11,8 +12,10 @@ import 'package:async/async.dart';
 import 'package:photo_view/photo_view.dart';
 
 import 'package:flutter_swiper/flutter_swiper.dart';
-import 'package:darknetyolov3/assets.dart';
+import 'assets.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+
+import 'network.dart';
 
 class MySliderSign extends StatefulWidget {
   @override
@@ -23,6 +26,10 @@ class _MySliderSignState extends State<MySliderSign> {
   final List<String> images = imgSignLink;
   final List<String> contentImgs = imgSignContent;
   List<SignDetail> _signDetails;
+  StringBuffer _urlPicture;
+  final Color color1 = Color(0xffFC5CF0);
+  final Color color2 = Color(0xffFE8852);
+  TextEditingController _c;
 
   SwiperController _controller;
   List<int> _indexObjectDetected;
@@ -197,31 +204,135 @@ class _MySliderSignState extends State<MySliderSign> {
 
   @override
   Widget build(BuildContext context) {
+    _c = new TextEditingController();
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Traffic Sign Detection'),
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            SizedBox(height: 40.0),
-            if (_imageFile != null)
-              Column(children: <Widget>[
-                _decideImage(base: _base64),
-                IconButton(
-                  icon: Icon(Icons.remove_red_eye),
-                  tooltip: 'Detect this traffic sign',
-                  onPressed: () {
-                    _makePostRequest(context, _imageFile);
-                  },
+            Stack(
+              children: <Widget>[
+                Container(
+                  height: 360,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(50.0),
+                          bottomRight: Radius.circular(50.0)),
+                      gradient: LinearGradient(
+                          colors: [color1, color2],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight)),
                 ),
-                Text('Detect'),
-                SizedBox(height: 30.0),
-              ]),
-            // After has solution
+                Container(
+                    margin: const EdgeInsets.only(top: 80),
+                    height: 500,
+                    child: Column(children: <Widget>[
+                      Text(
+                        "Bird detection",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontStyle: FontStyle.italic),
+                      ),
+                      SizedBox(height: 20.0),
+                      Expanded(
+                        child: Stack(
+                          children: <Widget>[
+                            Container(
+                                height: double.infinity,
+                                margin: const EdgeInsets.only(
+                                    left: 30.0, right: 30.0, top: 10.0),
+                                child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    child: _decideImage(base: _base64)))
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10.0),
+                      Container(
+                        child: Stack(
+                          children: <Widget>[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 5.0, horizontal: 16.0),
+                              margin: const EdgeInsets.only(
+                                  top: 30, left: 20.0, right: 20.0, bottom: 20.0),
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [color1, color2],
+                                  ),
+                                  borderRadius: BorderRadius.circular(30.0)),
+                              child: Row(
+                                children: <Widget>[
+                                  IconButton(
+                                    color: Colors.white,
+                                    icon: Icon(FontAwesomeIcons.link),
+                                    onPressed: () {
+                                      showDialog(
+                                          child: new Dialog(
+                                            child: new Column(
+                                              children: <Widget>[
+                                                new TextField(
+                                                  decoration: new InputDecoration(
+                                                      hintText: "Image url"),
+                                                  controller: _c,
+                                                ),
+                                                new FlatButton(
+                                                  child: new Text("Use this link"),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      if(_c.text.length>10)
+                                                      {
+                                                        _urlPicture =
+                                                        new StringBuffer(_c.text);
+                                                        _base64=null;
+                                                        _imageFile=null;
+                                                      }
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                          context: context);
+                                    },
+                                  ),
+                                  Spacer(),
+                                  IconButton(
+                                    color: Colors.white,
+                                    icon: Icon(Icons.image),
+                                    onPressed: () {
+                                      _showChoiceDiaglog(context);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Center(
+                              child: FloatingActionButton(
+                                child: Icon(
+                                  Icons.remove_red_eye,
+                                  color: Colors.pink,
+                                ),
+                                backgroundColor: Colors.white,
+                                onPressed: () {
+                                  if(_urlPicture!=null) _makePostRequestURL(context, _urlPicture.toString());
+                                  else
+                                    _makePostRequest(context, _imageFile);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+
+                    ])),
+              ],
+            ),
             if (hasSolution && _indexObjectDetected.length > 0)
               Text(
-                "${_indexObjectDetected.length} traffic sign(s) detected",
+                "${_indexObjectDetected.length} bird(s) detected",
                 style: DefaultTextStyle.of(context)
                     .style
                     .apply(fontSizeFactor: 1.5),
@@ -298,17 +409,6 @@ class _MySliderSignState extends State<MySliderSign> {
           ],
         ),
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(top: 75.0),
-        child: FloatingActionButton(
-            child: Icon(Icons.image),
-            tooltip: 'Select image to detect',
-            onPressed: () {
-              _showChoiceDiaglog(context);
-            }),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-      backgroundColor: Colors.black12,
     );
   }
 
@@ -316,8 +416,8 @@ class _MySliderSignState extends State<MySliderSign> {
     var pickedImage = await ImagePicker.pickImage(source: ImageSource.gallery);
     this.setState(() {
       _imageFile = pickedImage;
+      _urlPicture = null;
       _base64 = null;
-      hasSolution = false;
     });
     Navigator.of(context).pop();
   }
@@ -326,10 +426,39 @@ class _MySliderSignState extends State<MySliderSign> {
     var pickedImage = await ImagePicker.pickImage(source: ImageSource.camera);
     this.setState(() {
       _imageFile = pickedImage;
-      hasSolution = false;
+      _urlPicture = null;
       _base64 = null;
     });
     Navigator.of(context).pop();
+  }
+
+  _makePostRequestURL(BuildContext context, String imgUrl) async {
+    if (imgUrl == null) return;
+    setState(() {
+      pr.show();
+    });
+    Uri uriUrl = Uri.parse(_mIP + 'detection/url');
+    final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
+
+    Map<String, String> map1 = {'url': imgUrl};
+    imageUploadRequest.headers.addAll(map1);
+    final http.StreamedResponse response = await imageUploadRequest.send();
+
+    print('statusCode => ${response.statusCode}');
+    print('Header: ');
+
+//     listen for response
+    List<String> contentHeader = response.headers.values.toList();
+    for (String head in contentHeader) print(head);
+    print(contentHeader[2]);
+
+    await response.stream.toBytes().then((value) {
+      setState(() {
+        print('Hileo');
+        _base64 = value;
+      });
+      pr.hide();
+    });
   }
 
   _makePostRequest(BuildContext context, File imageFile) async {
@@ -399,61 +528,62 @@ class _MySliderSignState extends State<MySliderSign> {
         });
   }
 
-  Widget _decideImage({Uint8List base = null}) {
-//    if (base != null) {
+//  Widget _decideImage({Uint8List base = null}) {
+//    if (_base64 != null)
 //      return Container(
-//        color: Colors.white,
-//        width: 400,
-//        height: 400,
-//        child: PhotoView(
-//          imageProvider: new Image.memory(
-//            _base64,
-//            width: 400,
+//          padding: EdgeInsets.all(16.0),
+//          child: Container(
 //            height: 400,
-//          ).image,
-//        ),
-//      );
-//    }
+//            width: double.infinity,
+//            child: PhotoView(
+//              imageProvider: new Image.memory(
+//                _base64,
+//                width: 400,
+//                height: 400,
+//              ).image,
+//            ),
+//          ));
 //    if (_imageFile == null) {
 //      return Text("Your image here");
-//    } else {
-//      return Image.file(
-//        _imageFile,
-//        width: 400,
-//        height: 400,
-//      );
 //    }
+//    return Container(
+//        padding: EdgeInsets.all(16.0),
+//        child: Container(
+//          height: 300,
+//          width: double.infinity,
+//          decoration: BoxDecoration(
+//            gradient: LinearGradient(
+//                begin: Alignment.topRight,
+//                end: Alignment.bottomLeft,
+//                colors: [Colors.grey, Colors.lightBlue]),
+//            borderRadius: BorderRadius.circular(10.0),
+//            image: DecorationImage(image: FileImage(_imageFile)),
+//          ),
+//        ));
+//  }
+  Widget _decideImage({Uint8List base = null}) {
     if (_base64 != null)
-      return Container(
-          padding: EdgeInsets.all(16.0),
-          child: Container(
-            height: 400,
-            width: double.infinity,
-            child: PhotoView(
-              imageProvider: new Image.memory(
-                _base64,
-                width: 400,
-                height: 400,
-              ).image,
-            ),
-          ));
-    if (_imageFile == null) {
-      return Text("Your image here");
+      return PhotoView(
+        imageProvider: new Image.memory(
+          _base64,
+          width: 400,
+          height: 400,
+        ).image,
+      );
+    if (_urlPicture != null) {
+      return
+        PhotoView(
+            imageProvider: Image.network(_urlPicture.toString(), fit: BoxFit.fill).image);
     }
-    return Container(
-        padding: EdgeInsets.all(16.0),
-        child: Container(
-          height: 300,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [Colors.grey, Colors.lightBlue]),
-            borderRadius: BorderRadius.circular(10.0),
-            image: DecorationImage(image: FileImage(_imageFile)),
-          ),
-        ));
+
+    if (_imageFile == null)
+      return Image.asset(
+        'assets/no_img.png',
+        width: 400,
+        height: 400,
+      );
+    return PhotoView(
+        imageProvider: Image.file(_imageFile, fit: BoxFit.cover).image);
   }
 
   String _getNameSign(String imgLink) {

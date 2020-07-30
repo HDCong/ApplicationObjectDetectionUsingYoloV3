@@ -38,7 +38,7 @@ dependencies:
   search_widget:
   flappy_search_bar: 1.7.2
   dropdown_search: ^0.4.4
-
+  font_awesome_flutter:
 
 dev_dependencies:
   flutter_test:
@@ -54,7 +54,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
+  assets:
+    - assets/no_img.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
