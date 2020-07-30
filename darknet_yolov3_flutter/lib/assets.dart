@@ -1,5 +1,6 @@
 const String appLogo = 'assets/icon/icon.png';
 const String appFeatureImage = 'assets/icon/feature_store.jpg';
+const String mIP="https://772c407076ad.ngrok.io/";
 
 const List<String>imgSignLink=['https://xpgt.thuvienphapluat.vn/uploads/bienbao/S.501.png',
   'https://xpgt.thuvienphapluat.vn/uploads/bienbao/S.503d.png',
@@ -666,3 +667,4 @@ const List<String> imgSignContent=['Để thông báo chiều dài đoạn đư�
   'Để báo đường cấm các loại xe cơ giới kể cả xe máy 3 bánh có thùng rẽ phải hay rẽ trái, trừ xe máy 2 bánh, xe gắn máy và các xe được ưu tiên theo quy định,',
   'Để báo đường cấm các loại xe cơ giới kể cả xe máy 3 bánh có thùng rẽ phải hay rẽ trái, trừ xe máy 2 bánh, xe gắn máy và các xe được ưu tiên theo quy định.',
   'Để báo đường cấm các loại xe cơ giới kể cả xe máy 3 bánh có thùng đi qua, trừ xe máy 2 bánh, xe gắn máy và các xe được ưu tiên theo quy định.'];
+

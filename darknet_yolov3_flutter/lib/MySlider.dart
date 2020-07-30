@@ -37,9 +37,8 @@ class _MySliderSignState extends State<MySliderSign> {
   ProgressDialog pr;
   Uint8List _base64;
   bool hasSolution;
-  static String _mIP = "http://192.168.1.4:8558/";
-  Uri apiUrlCustom = Uri.parse(_mIP + "custom");
-  Uri apiUrl = Uri.parse(_mIP + "detection");
+  Uri apiUrlCustom = Uri.parse(mIP + "custom");
+  Uri apiUrl = Uri.parse(mIP + "detection");
   TextEditingController numberController = new TextEditingController();
 
   void intiForSignDetails() {
@@ -437,7 +436,7 @@ class _MySliderSignState extends State<MySliderSign> {
     setState(() {
       pr.show();
     });
-    Uri uriUrl = Uri.parse(_mIP + 'detection/url');
+    Uri uriUrl = Uri.parse(mIP + 'detection/url');
     final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
 
     Map<String, String> map1 = {'url': imgUrl};

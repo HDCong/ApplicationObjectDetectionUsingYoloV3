@@ -10,6 +10,8 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:async/async.dart';
 import 'package:photo_view/photo_view.dart';
 
+import 'assets.dart';
+
 //import 'network.dart';
 
 class DefautModelScreen extends StatefulWidget {
@@ -21,12 +23,12 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
   File _imageFile;
   ProgressDialog pr;
   Uint8List _base64;
-  static String _mIP = "http://192.168.1.4:8558/";
+//  static String _mIP = "http://192.168.1.4:8558/";
   final Color color1 = Color(0xffFC5CF0);
   final Color color2 = Color(0xffFE8852);
   TextEditingController _c;
   StringBuffer _urlPicture;
-  Uri apiUrl = Uri.parse(_mIP + "detection");
+  Uri apiUrl = Uri.parse(mIP + "detection");
 
   void _openGallery(BuildContext context) async {
     var pickedImage = await ImagePicker.pickImage(source: ImageSource.gallery);
@@ -53,7 +55,7 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
     setState(() {
       pr.show();
     });
-    Uri uriUrl = Uri.parse(_mIP+'detection/url');
+    Uri uriUrl = Uri.parse(mIP+'detection/url');
     final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
 
     Map<String, String> map1 = {'url': imgUrl};
