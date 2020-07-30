@@ -2,6 +2,7 @@ import 'package:darknetyolov3/DefaultModel.dart';
 import 'package:darknetyolov3/MySlider.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class FancyBottomBarPage extends StatefulWidget {
   @override
@@ -42,11 +43,11 @@ class _FancyBottomBarPageState extends State<FancyBottomBarPage> {
               currentIndex: cIndex,
               items: <FancyBottomNavigationItem>[
                 FancyBottomNavigationItem(
-                    icon: Icon(Icons.home),
-                    title: Text('Traffic Sign Detection')),
+                    icon: Icon(FontAwesomeIcons.crow,size:20),
+                    title: Text('Bird Detection')),
                 FancyBottomNavigationItem(
                     icon: Icon(Icons.camera_front),
-                    title: Text('\t\t\t\tDefaut Model')),
+                    title: Text('\t\tDefaut Model')),
 
               ],
               onItemSelected: (int value) {

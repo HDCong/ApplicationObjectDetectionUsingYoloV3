@@ -1,6 +1,7 @@
 const String appLogo = 'assets/icon/icon.png';
 const String appFeatureImage = 'assets/icon/feature_store.jpg';
-const String mIP="https://772c407076ad.ngrok.io/";
+//const String mIP="https://cd6af1146e91.ngrok.io/";
+const String mIP="http://192.168.1.4:8558/";
 
 const List<String>imgSignLink=['https://xpgt.thuvienphapluat.vn/uploads/bienbao/S.501.png',
   'https://xpgt.thuvienphapluat.vn/uploads/bienbao/S.503d.png',

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:darknetyolov3/SignDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -10,7 +11,6 @@ import 'package:http/http.dart' as http;
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:async/async.dart';
 import 'package:photo_view/photo_view.dart';
-
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'assets.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -81,7 +81,7 @@ class _MySliderSignState extends State<MySliderSign> {
               gradient: LinearGradient(
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
-                  colors: [Colors.grey, Colors.lightBlue]),
+                  colors: [color1, color2]),
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(10.0),
                   topRight: Radius.circular(10.0)),
@@ -119,7 +119,7 @@ class _MySliderSignState extends State<MySliderSign> {
               gradient: LinearGradient(
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
-                  colors: [Colors.grey, Colors.lightBlue]),
+                  colors: [color1, color2]),
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(10.0),
                   topRight: Radius.circular(10.0)),
@@ -255,7 +255,10 @@ class _MySliderSignState extends State<MySliderSign> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 5.0, horizontal: 16.0),
                               margin: const EdgeInsets.only(
-                                  top: 30, left: 20.0, right: 20.0, bottom: 20.0),
+                                  top: 30,
+                                  left: 20.0,
+                                  right: 20.0,
+                                  bottom: 20.0),
                               decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [color1, color2],
@@ -272,20 +275,23 @@ class _MySliderSignState extends State<MySliderSign> {
                                             child: new Column(
                                               children: <Widget>[
                                                 new TextField(
-                                                  decoration: new InputDecoration(
-                                                      hintText: "Image url"),
+                                                  decoration:
+                                                      new InputDecoration(
+                                                          hintText:
+                                                              "Image url"),
                                                   controller: _c,
                                                 ),
                                                 new FlatButton(
-                                                  child: new Text("Use this link"),
+                                                  child:
+                                                      new Text("Use this link"),
                                                   onPressed: () {
                                                     setState(() {
-                                                      if(_c.text.length>10)
-                                                      {
+                                                      if (_c.text.length > 10) {
                                                         _urlPicture =
-                                                        new StringBuffer(_c.text);
-                                                        _base64=null;
-                                                        _imageFile=null;
+                                                            new StringBuffer(
+                                                                _c.text);
+                                                        _base64 = null;
+                                                        _imageFile = null;
                                                       }
                                                     });
                                                     Navigator.pop(context);
@@ -316,7 +322,9 @@ class _MySliderSignState extends State<MySliderSign> {
                                 ),
                                 backgroundColor: Colors.white,
                                 onPressed: () {
-                                  if(_urlPicture!=null) _makePostRequestURL(context, _urlPicture.toString());
+                                  if (_urlPicture != null)
+                                    _makePostRequestURL(
+                                        context, _urlPicture.toString());
                                   else
                                     _makePostRequest(context, _imageFile);
                                 },
@@ -325,7 +333,6 @@ class _MySliderSignState extends State<MySliderSign> {
                           ],
                         ),
                       )
-
                     ])),
               ],
             ),
@@ -340,7 +347,7 @@ class _MySliderSignState extends State<MySliderSign> {
                 ? Container()
                 : Container(
                     height: 340,
-                    color: Colors.black12,
+                    color: Colors.white,
                     padding: EdgeInsets.all(16.0),
                     child: _buildSwipe2(),
                   ),
@@ -401,7 +408,7 @@ class _MySliderSignState extends State<MySliderSign> {
             //Swiper here
             Container(
               height: 340,
-              color: Colors.black12,
+              color: Colors.white,
               padding: EdgeInsets.all(16.0),
               child: _buildSwipe(),
             ),
@@ -417,6 +424,7 @@ class _MySliderSignState extends State<MySliderSign> {
       _imageFile = pickedImage;
       _urlPicture = null;
       _base64 = null;
+      hasSolution = false;
     });
     Navigator.of(context).pop();
   }
@@ -427,12 +435,15 @@ class _MySliderSignState extends State<MySliderSign> {
       _imageFile = pickedImage;
       _urlPicture = null;
       _base64 = null;
+      hasSolution = false;
     });
     Navigator.of(context).pop();
   }
 
   _makePostRequestURL(BuildContext context, String imgUrl) async {
     if (imgUrl == null) return;
+    hasSolution = false;
+
     setState(() {
       pr.show();
     });
@@ -442,14 +453,31 @@ class _MySliderSignState extends State<MySliderSign> {
     Map<String, String> map1 = {'url': imgUrl};
     imageUploadRequest.headers.addAll(map1);
     final http.StreamedResponse response = await imageUploadRequest.send();
-
+    print(response.headers);
     print('statusCode => ${response.statusCode}');
     print('Header: ');
-
 //     listen for response
-    List<String> contentHeader = response.headers.values.toList();
-    for (String head in contentHeader) print(head);
-    print(contentHeader[2]);
+//    List<String> contentHeader = response.headers.values.toList();
+//    print('At new url : ');
+    if (response.statusCode >= 400) {
+      setState(() {
+        pr.hide();
+      });
+      return;
+    }
+    ;
+
+    print(response.headers['listindex']);
+    if (response.headers['listindex'].length > 0) {
+      List<int> listObject =
+          response.headers['listindex'].split(',').map(int.parse).toList();
+      _indexObjectDetected = listObject;
+//      for (int x in listObject) print(x);
+      hasSolution = true;
+      setState(() {});
+    } else {
+      _indexObjectDetected = new List<int>();
+    }
 
     await response.stream.toBytes().then((value) {
       setState(() {
@@ -462,6 +490,8 @@ class _MySliderSignState extends State<MySliderSign> {
 
   _makePostRequest(BuildContext context, File imageFile) async {
     if (imageFile == null) return;
+    hasSolution = false;
+
     setState(() {
       pr.show();
     });
@@ -475,17 +505,26 @@ class _MySliderSignState extends State<MySliderSign> {
 
     final http.StreamedResponse response = await imageUploadRequest.send();
     print('statusCode => ${response.statusCode}');
-
+    if (response.statusCode >= 400) {
+      setState(() {
+        pr.hide();
+      });
+      return;
+    }
+    ;
 //     listen for response
     List<String> contentHeader = response.headers.values.toList();
-
-    if (contentHeader[2].length > 0) {
+    print('Header At new: ');
+    print(response.headers['listindex']);
+    if (response.headers['listindex'].length > 0) {
       List<int> listObject =
-          contentHeader[2].split(',').map(int.parse).toList();
+          response.headers['listindex'].split(',').map(int.parse).toList();
       _indexObjectDetected = listObject;
       for (int x in listObject) print(x);
       hasSolution = true;
-      setState(() {});
+      setState(() {
+
+      });
     } else {
       _indexObjectDetected = new List<int>();
     }
@@ -560,7 +599,7 @@ class _MySliderSignState extends State<MySliderSign> {
 //          ),
 //        ));
 //  }
-  Widget _decideImage({Uint8List base = null}) {
+  Widget _decideImage({Uint8List base = null, BuildContext context}) {
     if (_base64 != null)
       return PhotoView(
         imageProvider: new Image.memory(
@@ -570,9 +609,23 @@ class _MySliderSignState extends State<MySliderSign> {
         ).image,
       );
     if (_urlPicture != null) {
-      return
-        PhotoView(
-            imageProvider: Image.network(_urlPicture.toString(), fit: BoxFit.fill).image);
+      String url = _urlPicture.toString();
+      try {
+        return CachedNetworkImage(
+          imageUrl: url,
+          fit: BoxFit.cover,
+          errorWidget: (context, url, error) {
+            _urlPicture = null;
+            return Image(
+              image: AssetImage('assets/no_img.png'),
+            );
+          },
+        );
+      } catch (e) {
+        return Image(
+          image: AssetImage('assets/no_img.png'),
+        );
+      }
     }
 
     if (_imageFile == null)

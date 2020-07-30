@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -61,16 +62,14 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
     Map<String, String> map1 = {'url': imgUrl};
     imageUploadRequest.headers.addAll(map1);
     final http.StreamedResponse response = await imageUploadRequest.send();
-
+    print(response.headers);
     print('statusCode => ${response.statusCode}');
-    print('Header: ');
-
-//     listen for response
-    List<String> contentHeader = response.headers.values.toList();
-    for(String head in contentHeader)
-      print(head);
-    print(contentHeader[2]);
-
+    if(response.statusCode>=400) {
+      setState(() {
+        pr.hide();
+      });
+      return;
+    };
     await response.stream.toBytes().then((value) {
       setState(() {
         _base64 = value;
@@ -94,13 +93,13 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
 
     final http.StreamedResponse response = await imageUploadRequest.send();
     print('statusCode => ${response.statusCode}');
+    if(response.statusCode>=400) {
+      setState(() {
+        pr.hide();
+      });
+      return;
+    };
     print('Header: ');
-
-//     listen for response
-    List<String> contentHeader = response.headers.values.toList();
-    // Index of object
-    print(contentHeader[2]);
-
     await response.stream.toBytes().then((value) {
       setState(() {
         _base64 = value;
@@ -137,7 +136,7 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
         });
   }
 
-  Widget _decideImage({Uint8List base = null}) {
+  Widget _decideImage({Uint8List base = null,BuildContext context}) {
     if (_base64 != null)
       return PhotoView(
         imageProvider: new Image.memory(
@@ -147,10 +146,22 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
         ).image,
       );
     if (_urlPicture != null){
-      return Image.network(
-        _urlPicture.toString(),
-        fit: BoxFit.fill,
-      );
+      String url = _urlPicture.toString();
+      try {
+        return CachedNetworkImage(
+          imageUrl: url,
+          errorWidget: (context, url, error) {
+            _urlPicture=null;
+            return Image(
+              image: AssetImage('assets/no_img.png'),
+            );
+          },
+        );
+      } catch (e) {
+        return Image(
+          image: AssetImage('assets/no_img.png'),
+        );
+      }
     }
 
     if (_imageFile == null)
@@ -253,7 +264,7 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
                                             child: new Text("Use this link"),
                                             onPressed: () {
                                               setState(() {
-                                                if(_c.text.length>10)
+                                                if(_c.text.length>10 && Uri.parse(_c.text).isAbsolute)
                                                 {
                                                   _urlPicture =
                                                   new StringBuffer(_c.text);

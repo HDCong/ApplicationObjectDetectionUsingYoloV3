@@ -113,9 +113,9 @@ nets=load_model(cfgpath,wpath)
 Colors=get_colors(Lables)
 ###### My custom
 
-custom_labelsPath="./obj-2.names"
+custom_labelsPath="./obj.names"
 custom_cfgpath="./yolov3_custom_sign.cfg"
-custom_wpath="./yolov3_custom_sign_last.weights"
+custom_wpath="./yolov3_test_1class_last.weights"
 custom_Lables=get_labels(custom_labelsPath)
 custom_nets=load_model(custom_cfgpath,custom_wpath)
 custom_Colors=get_colors(custom_Lables)
@@ -143,15 +143,16 @@ def main():
     buffered = BytesIO()
     np_img.save(buffered, format="JPEG")
     # img_str = base64.b64encode(buffered.getvalue())
-    
+
     my_encoded_img = buffered.getvalue()
     response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+    response.headers['connection']='keep-alive'
     response.headers["listIndex"]= listIndex
+    print(response.headers)
     return response
+
 @app.route('/detection/url', methods=['POST'])
 def mainUrlDetection():
-    print('Detection by url')
-
     # load our input image and grab its spatial dimensions
     # img = request.["image"].read();
     imgUrl= request.headers['Url']
@@ -160,7 +161,7 @@ def mainUrlDetection():
     img = Image.open("imgdetect.jpg")
 
     np_img=np.array(img)
-    
+
     image=np_img.copy()
     image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
     res, listIndex=get_prediction(image,nets,Lables,Colors)
@@ -175,7 +176,7 @@ def mainUrlDetection():
     os.remove('imgdetect.jpg')
     response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
     response.headers["listIndex"]= listIndex
-    print(response.headers)
+    response.headers['connection']='keep-alive'
     return response
 
 @app.route('/custom', methods=['POST'])
@@ -199,6 +200,7 @@ def main2():
 
     my_encoded_img = buffered.getvalue()
     response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+    response.headers['connection']='keep-alive'
     response.headers["listIndex"]=listIndex
     return response
 
