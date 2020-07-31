@@ -25,8 +25,9 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
   ProgressDialog pr;
   Uint8List _base64;
 //  static String _mIP = "http://192.168.1.4:8558/";
-  final Color color1 = Color(0xffFC5CF0);
-  final Color color2 = Color(0xffFE8852);
+
+  final Color color1 = Color.fromRGBO(252, 119, 3, 1);
+  final Color color2 = Color.fromRGBO(252, 244, 3, 1);
   TextEditingController _c;
   StringBuffer _urlPicture;
   Uri apiUrl = Uri.parse(mIP + "detection");

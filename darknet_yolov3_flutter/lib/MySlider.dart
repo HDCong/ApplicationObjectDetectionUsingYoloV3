@@ -3,7 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:darknetyolov3/SignDetail.dart';
+import 'package:darknetyolov3/BirdObject.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,18 +17,20 @@ import 'package:dropdown_search/dropdown_search.dart';
 
 import 'network.dart';
 
-class MySliderSign extends StatefulWidget {
+class MySliderBird extends StatefulWidget {
   @override
-  _MySliderSignState createState() => _MySliderSignState();
+  _MySliderBirdState createState() => _MySliderBirdState();
 }
 
-class _MySliderSignState extends State<MySliderSign> {
-  final List<String> images = imgSignLink;
-  final List<String> contentImgs = imgSignContent;
-  List<SignDetail> _signDetails;
+class _MySliderBirdState extends State<MySliderBird> {
+  final List<String> images = birdImg;
+  final List<String> contentImgs = birdInfor;
+  final List<String> name = birdName;
+
+  List<BirdObject> _BirdObject;
   StringBuffer _urlPicture;
-  final Color color1 = Color(0xffFC5CF0);
-  final Color color2 = Color(0xffFE8852);
+  final Color color1 = Color.fromRGBO(252, 119, 3, 1);
+  final Color color2 = Color.fromRGBO(252, 244, 3, 1);
   TextEditingController _c;
 
   SwiperController _controller;
@@ -37,14 +39,16 @@ class _MySliderSignState extends State<MySliderSign> {
   ProgressDialog pr;
   Uint8List _base64;
   bool hasSolution;
-  Uri apiUrlCustom = Uri.parse(mIP + "custom");
-  Uri apiUrl = Uri.parse(mIP + "detection");
+  Uri apiUrl = Uri.parse(mIP + "custom");
+//  Uri apiUrl = Uri.parse(mIP + "detection");
   TextEditingController numberController = new TextEditingController();
 
   void intiForSignDetails() {
-    _signDetails = new List<SignDetail>();
-    for (int i = 0; i < imgSignLink.length; i++)
-      _signDetails.add(new SignDetail(i, imgSignLink[i], imgSignContent[i]));
+    _BirdObject = new List<BirdObject>();
+    for (int i = 0; i < images.length; i++){
+      _BirdObject.add(new BirdObject(i, name[i], images[i], contentImgs[i]));
+
+    }
   }
 
   @override
@@ -99,8 +103,8 @@ class _MySliderSignState extends State<MySliderSign> {
                       bottomLeft: Radius.circular(10.0),
                       bottomRight: Radius.circular(10.0))),
               child: ListTile(
-                title: Text('Biển số: ' + _getNameSign(imgSignLink[index])),
-                subtitle: Text(contentImgs[index]),
+                title: Text(_BirdObject[index].mName),
+                subtitle: Text(_BirdObject[index].mContent),
               ),
             ),
           ),
@@ -138,9 +142,8 @@ class _MySliderSignState extends State<MySliderSign> {
                       bottomLeft: Radius.circular(10.0),
                       bottomRight: Radius.circular(10.0))),
               child: ListTile(
-                title: Text('Biển số: ' +
-                    _getNameSign(imgSignLink[_indexObjectDetected[index]])),
-                subtitle: Text(contentImgs[_indexObjectDetected[index]]),
+                title: Text(_BirdObject[_indexObjectDetected[index]].mName),
+                subtitle: Text(_BirdObject[_indexObjectDetected[index]].mContent),
               ),
             ),
           ),
@@ -152,7 +155,7 @@ class _MySliderSignState extends State<MySliderSign> {
   Widget _buildSwipe() {
     return Swiper(
       itemBuilder: _buildItem,
-      itemCount: imgSignLink.length,
+      itemCount: images.length,
       scale: 0.9,
       layout: SwiperLayout.DEFAULT,
       itemHeight: 300,
@@ -180,7 +183,7 @@ class _MySliderSignState extends State<MySliderSign> {
   }
 
   Widget _customPopupItem(
-      BuildContext context, SignDetail item, bool isSelected) {
+      BuildContext context, BirdObject item, bool isSelected) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 8),
       decoration: !isSelected
@@ -192,7 +195,7 @@ class _MySliderSignState extends State<MySliderSign> {
             ),
       child: ListTile(
         selected: isSelected,
-        title: Text("Biển số " + _getNameSign(item.mLink)),
+        title: Text(item.mName),
         subtitle: Text(item.mContent),
         leading: CircleAvatar(
           backgroundImage: NetworkImage(item.mLink),
@@ -359,11 +362,11 @@ class _MySliderSignState extends State<MySliderSign> {
             ),
             Container(
               padding: EdgeInsets.all(16.0),
-              child: DropdownSearch<SignDetail>(
+              child: DropdownSearch<BirdObject>(
                 mode: Mode.BOTTOM_SHEET,
                 maxHeight: 300,
-                items: _signDetails,
-                onChanged: (SignDetail d) {
+                items: _BirdObject,
+                onChanged: (BirdObject d) {
                   print(d.index);
                   _controller.move(d.index);
                 },
@@ -373,7 +376,7 @@ class _MySliderSignState extends State<MySliderSign> {
                 searchBoxDecoration: InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.fromLTRB(12, 12, 8, 0),
-                  labelText: "Search for sign or content",
+                  labelText: "Search for bird",
                 ),
                 popupTitle: Container(
                   height: 50,
@@ -386,7 +389,7 @@ class _MySliderSignState extends State<MySliderSign> {
                   ),
                   child: Center(
                     child: Text(
-                      'Search for traffic sign',
+                      'Search for bird',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -401,8 +404,8 @@ class _MySliderSignState extends State<MySliderSign> {
                     topRight: Radius.circular(24),
                   ),
                 ),
-                compareFn: (SignDetail i, SignDetail s) => i.isEqual(s),
-                filterFn: (SignDetail i, String filter) => i.isFiltered(filter),
+                compareFn: (BirdObject i, BirdObject s) => i.isEqual(s),
+                filterFn: (BirdObject i, String filter) => i.isFiltered(filter),
               ),
             ),
             //Swiper here
@@ -447,7 +450,7 @@ class _MySliderSignState extends State<MySliderSign> {
     setState(() {
       pr.show();
     });
-    Uri uriUrl = Uri.parse(mIP + 'detection/url');
+    Uri uriUrl = Uri.parse(mIP + '/url');
     final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
 
     Map<String, String> map1 = {'url': imgUrl};
@@ -638,17 +641,13 @@ class _MySliderSignState extends State<MySliderSign> {
         imageProvider: Image.file(_imageFile, fit: BoxFit.cover).image);
   }
 
-  String _getNameSign(String imgLink) {
-    return imgLink.substring(48, imgLink.indexOf(".png"));
-  }
-
-  Future<List<SignDetail>> filterData(String filterz) async {
+  Future<List<BirdObject>> filterData(String filterz) async {
     print('filter: ' + filterz);
     String filter = filterz.toLowerCase();
-    if (filter.length == 0) return _signDetails;
-    List<SignDetail> res = new List<SignDetail>();
-    for (SignDetail signDetail in _signDetails) {
-      if (_getNameSign(signDetail.mLink).toLowerCase().contains(filter) ||
+    if (filter.length == 0) return _BirdObject;
+    List<BirdObject> res = new List<BirdObject>();
+    for (BirdObject signDetail in _BirdObject) {
+      if (signDetail.mName.toLowerCase().contains(filter) ||
           signDetail.mContent.toLowerCase().contains(filter))
         res.add(signDetail);
     }

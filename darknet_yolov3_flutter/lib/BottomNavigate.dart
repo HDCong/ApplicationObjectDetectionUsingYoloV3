@@ -30,7 +30,7 @@ class _FancyBottomBarPageState extends State<FancyBottomBarPage> {
         },
         controller: pageController,
         children: <Widget>[
-          MySliderSign(),
+          MySliderBird(),
           DefautModelScreen(),
         ],
       ),
