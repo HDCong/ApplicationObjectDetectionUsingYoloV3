@@ -14,8 +14,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'assets.dart';
 import 'package:dropdown_search/dropdown_search.dart';
-
-import 'network.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class MySliderBird extends StatefulWidget {
   @override
@@ -43,7 +42,7 @@ class _MySliderBirdState extends State<MySliderBird> {
 //  Uri apiUrl = Uri.parse(mIP + "detection");
   TextEditingController numberController = new TextEditingController();
 
-  void intiForSignDetails() {
+  void intiForbirdDetails() {
     _BirdObject = new List<BirdObject>();
     for (int i = 0; i < images.length; i++){
       _BirdObject.add(new BirdObject(i, name[i], images[i], contentImgs[i]));
@@ -56,7 +55,7 @@ class _MySliderBirdState extends State<MySliderBird> {
     _indexObjectDetected = new List<int>();
     _controller = new SwiperController();
     hasSolution = false;
-    intiForSignDetails();
+    intiForbirdDetails();
     pr = new ProgressDialog(context, type: ProgressDialogType.Normal);
 
     //Optional
@@ -177,7 +176,7 @@ class _MySliderBirdState extends State<MySliderBird> {
       itemWidth: 300,
 //      controller: _controller,
       fade: 0.5,
-      pagination: new SwiperPagination(),
+//      pagination: new SwiperPagination(),
     );
 //    ]);
   }
@@ -189,10 +188,10 @@ class _MySliderBirdState extends State<MySliderBird> {
       decoration: !isSelected
           ? null
           : BoxDecoration(
-              border: Border.all(color: Theme.of(context).primaryColor),
-              borderRadius: BorderRadius.circular(5),
-              color: Colors.white,
-            ),
+        border: Border.all(color: Theme.of(context).primaryColor),
+        borderRadius: BorderRadius.circular(5),
+        color: Colors.white,
+      ),
       child: ListTile(
         selected: isSelected,
         title: Text(item.mName),
@@ -279,20 +278,20 @@ class _MySliderBirdState extends State<MySliderBird> {
                                               children: <Widget>[
                                                 new TextField(
                                                   decoration:
-                                                      new InputDecoration(
-                                                          hintText:
-                                                              "Image url"),
+                                                  new InputDecoration(
+                                                      hintText:
+                                                      "Image url"),
                                                   controller: _c,
                                                 ),
                                                 new FlatButton(
                                                   child:
-                                                      new Text("Use this link"),
+                                                  new Text("Use this link"),
                                                   onPressed: () {
                                                     setState(() {
                                                       if (_c.text.length > 10) {
                                                         _urlPicture =
-                                                            new StringBuffer(
-                                                                _c.text);
+                                                        new StringBuffer(
+                                                            _c.text);
                                                         _base64 = null;
                                                         _imageFile = null;
                                                       }
@@ -325,6 +324,7 @@ class _MySliderBirdState extends State<MySliderBird> {
                                 ),
                                 backgroundColor: Colors.white,
                                 onPressed: () {
+
                                   if (_urlPicture != null)
                                     _makePostRequestURL(
                                         context, _urlPicture.toString());
@@ -349,16 +349,16 @@ class _MySliderBirdState extends State<MySliderBird> {
             hasSolution == false
                 ? Container()
                 : Container(
-                    height: 340,
-                    color: Colors.white,
-                    padding: EdgeInsets.all(16.0),
-                    child: _buildSwipe2(),
-                  ),
+              height: 340,
+              color: Colors.white,
+              padding: EdgeInsets.all(16.0),
+              child: _buildSwipe2(),
+            ),
             SizedBox(height: 30.0),
             Text(
               "Discovery or Search",
               style:
-                  DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2.0),
+              DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2.0),
             ),
             Container(
               padding: EdgeInsets.all(16.0),
@@ -450,7 +450,8 @@ class _MySliderBirdState extends State<MySliderBird> {
     setState(() {
       pr.show();
     });
-    Uri uriUrl = Uri.parse(mIP + '/url');
+    Uri uriUrl = Uri.parse(apiUrl.toString() + '/url');
+
     final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
 
     Map<String, String> map1 = {'url': imgUrl};
@@ -459,9 +460,7 @@ class _MySliderBirdState extends State<MySliderBird> {
     print(response.headers);
     print('statusCode => ${response.statusCode}');
     print('Header: ');
-//     listen for response
-//    List<String> contentHeader = response.headers.values.toList();
-//    print('At new url : ');
+
     if (response.statusCode >= 400) {
       setState(() {
         pr.hide();
@@ -473,13 +472,21 @@ class _MySliderBirdState extends State<MySliderBird> {
     print(response.headers['listindex']);
     if (response.headers['listindex'].length > 0) {
       List<int> listObject =
-          response.headers['listindex'].split(',').map(int.parse).toList();
+      response.headers['listindex'].split(',').map(int.parse).toList();
       _indexObjectDetected = listObject;
-//      for (int x in listObject) print(x);
       hasSolution = true;
       setState(() {});
     } else {
       _indexObjectDetected = new List<int>();
+      Fluttertoast.showToast(
+          msg: "No object detected",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.blueAccent,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
     }
 
     await response.stream.toBytes().then((value) {
@@ -499,11 +506,11 @@ class _MySliderBirdState extends State<MySliderBird> {
       pr.show();
     });
     var stream =
-        new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
+    new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
     final imageUploadRequest = http.MultipartRequest('POST', apiUrl);
     var length = await imageFile.length();
     var multipartFile =
-        new http.MultipartFile('image', stream, length, filename: 'image');
+    new http.MultipartFile('image', stream, length, filename: 'image');
     imageUploadRequest.files.add(multipartFile);
 
     final http.StreamedResponse response = await imageUploadRequest.send();
@@ -521,7 +528,7 @@ class _MySliderBirdState extends State<MySliderBird> {
     print(response.headers['listindex']);
     if (response.headers['listindex'].length > 0) {
       List<int> listObject =
-          response.headers['listindex'].split(',').map(int.parse).toList();
+      response.headers['listindex'].split(',').map(int.parse).toList();
       _indexObjectDetected = listObject;
       for (int x in listObject) print(x);
       hasSolution = true;
@@ -530,6 +537,15 @@ class _MySliderBirdState extends State<MySliderBird> {
       });
     } else {
       _indexObjectDetected = new List<int>();
+      Fluttertoast.showToast(
+          msg: "No object detected",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.blueAccent,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
     }
 
     await response.stream.toBytes().then((value) {
@@ -549,22 +565,22 @@ class _MySliderBirdState extends State<MySliderBird> {
             title: Text('Choose your image'),
             content: SingleChildScrollView(
                 child: ListBody(
-              children: <Widget>[
-                GestureDetector(
-                  child: Text("Gallery"),
-                  onTap: () {
-                    _openGallery(context);
-                  },
-                ),
-                Padding(padding: EdgeInsets.all(8)),
-                GestureDetector(
-                  child: Text("Camera"),
-                  onTap: () {
-                    _openCamera(context);
-                  },
-                )
-              ],
-            )),
+                  children: <Widget>[
+                    GestureDetector(
+                      child: Text("Gallery"),
+                      onTap: () {
+                        _openGallery(context);
+                      },
+                    ),
+                    Padding(padding: EdgeInsets.all(8)),
+                    GestureDetector(
+                      child: Text("Camera"),
+                      onTap: () {
+                        _openCamera(context);
+                      },
+                    )
+                  ],
+                )),
           );
         });
   }
@@ -646,10 +662,10 @@ class _MySliderBirdState extends State<MySliderBird> {
     String filter = filterz.toLowerCase();
     if (filter.length == 0) return _BirdObject;
     List<BirdObject> res = new List<BirdObject>();
-    for (BirdObject signDetail in _BirdObject) {
-      if (signDetail.mName.toLowerCase().contains(filter) ||
-          signDetail.mContent.toLowerCase().contains(filter))
-        res.add(signDetail);
+    for (BirdObject birdDetail in _BirdObject) {
+      if (birdDetail.mName.toLowerCase().contains(filter) ||
+          birdDetail.mContent.toLowerCase().contains(filter))
+        res.add(birdDetail);
     }
     return res;
   }

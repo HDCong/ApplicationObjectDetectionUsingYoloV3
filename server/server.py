@@ -5,56 +5,50 @@ import cv2
 import os
 from bounding_box import bounding_box as bb
 from flask import Flask, request, Response, jsonify
-import jsonpickle
-#import binascii
+# import jsonpickle
 import io as StringIO
 import base64
 from io import BytesIO
 import io
-import json
+# import json
 from PIL import Image
 import urllib.request
 # construct the argument parse and parse the arguments
 
-confthres = 0.7
-nmsthres = 0.6
+confthres = 0.55
+nmsthres = 0.7
 
 
-def get_labels(labels_path):
-    LABELS = open(labels_path).read().strip().split("\n")
-    return LABELS
+# read label in .names file
+def readLabelFromFile(labelsDir):
+    res = []
+    with open(labelsDir) as f:
+        for line in f:
+            res.append(line[0:len(line)-1])
+    return res
 
-def get_colors(LABELS):
+def generateColor(listLabel):
     color =['navy', 'blue', 'aqua', 'teal', 'olive',
      'green', 'lime', 'yellow', 'orange', 'red', 'maroon', 
      'fuchsia', 'purple', 'black', 'gray' ,'silver']
-    COLORS =[]
-    for x in range(len(LABELS)):
-        COLORS.append(color[x%len(color)])
-    return COLORS
-
-def load_model(configpath,weightspath):
-    print("[INFO] loading YOLO from disk...")
-    net = cv2.dnn.readNetFromDarknet(configpath, weightspath)
-    return net
-
-def image_to_byte_array(image:Image):
-  imgByteArr = io.BytesIO()
-  image.save(imgByteArr, format='PNG')
-  imgByteArr = imgByteArr.getvalue()
-  return imgByteArr
+    res =[]
+    for x in range(len(listLabel)):
+        res.append(color[x%len(color)])
+    return res
+# Use opencv dnn  
+def loadModel(cfgFile,weightsFile):
+    netRead = cv2.dnn.readNetFromDarknet(cfgFile, weightsFile)
+    return netRead
 
 def get_prediction(image,net,LABELS,COLORS):
 
     (H, W) = image.shape[:2]
     ln = net.getLayerNames()
     ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-
     blob = cv2.dnn.blobFromImage(image, 0.00392,(416,416),(0,0,0),True,crop=False)
     net.setInput(blob)
     start = time.time()
     layerOutputs = net.forward(ln)
-
     end = time.time()
 
     print("[INFO] YOLO took {:.6f} seconds".format(end - start))
@@ -99,26 +93,24 @@ def get_prediction(image,net,LABELS,COLORS):
             # extract the bounding box coordinates
             (x, y) = (boxes[i][0], boxes[i][1])
             (w, h) = (boxes[i][2], boxes[i][3])
+
             text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
             bb.add(image,x,y,x+w,y+h,text,COLORS[classIDs[i]])
+            # cv2.rectangle(image, (x, y) , (x + w, y + h), color, 2)
+            # cv2.putText(image, text, (x, y ), cv2.FONT_HERSHEY_SIMPLEX,0.5, color, 2)
+
     listClassne =','.join([str(n) for n in classIDs])
     print((listClassne))
     return image, listClassne
 
-labelsPath="./coco.names"
-cfgpath="./yolov3.cfg"
-wpath="./yolov3.weights"
-Lables=get_labels(labelsPath)
-nets=load_model(cfgpath,wpath)
-Colors=get_colors(Lables)
-###### My custom
+Lables=readLabelFromFile("./coco.names")
+Colors=generateColor(Lables)
+nets=loadModel("./yolov3.cfg","./yolov3.weights")
 
-custom_labelsPath="./obj-2.names"
-custom_cfgpath="./yolov3_bird.cfg"
-custom_wpath="./yolov3_bird_last.weights"
-custom_Lables=get_labels(custom_labelsPath)
-custom_nets=load_model(custom_cfgpath,custom_wpath)
-custom_Colors=get_colors(custom_Lables)
+###### My custom
+custom_Lables=readLabelFromFile("./obj-2.names")
+custom_Colors=generateColor(custom_Lables)
+custom_nets=loadModel("./yolov3_bird.cfg","./yolov3_bird_21000.weights")
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -157,8 +149,8 @@ def mainUrlDetection():
     # img = request.["image"].read();
     imgUrl= request.headers['Url']
 
-    urllib.request.urlretrieve(imgUrl, "imgdetect.jpg")
-    img = Image.open("imgdetect.jpg")
+    urllib.request.urlretrieve(imgUrl, "imgdetect")
+    img = Image.open("imgdetect")
 
     np_img=np.array(img)
 
@@ -173,7 +165,7 @@ def mainUrlDetection():
     # img_str = base64.b64encode(buffered.getvalue())
     
     my_encoded_img = buffered.getvalue()
-    os.remove('imgdetect.jpg')
+    os.remove('imgdetect')
     response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
     response.headers["listIndex"]= listIndex
     response.headers['connection']='keep-alive'
@@ -206,12 +198,13 @@ def main2():
 
 @app.route('/custom/url', methods=['POST'])
 def main2UrlDetection():
-    # load our input image and grab its spatial dimensions
-    # img = request.["image"].read();
+    print('Custom request url')
+
     imgUrl= request.headers['Url']
 
-    urllib.request.urlretrieve(imgUrl, "imgdetect.jpg")
-    img = Image.open("imgdetect.jpg")
+    urllib.request.urlretrieve(imgUrl, "imgdetect")
+
+    img = Image.open("imgdetect")
 
     np_img=np.array(img)
 
@@ -226,7 +219,7 @@ def main2UrlDetection():
     # img_str = base64.b64encode(buffered.getvalue())
     
     my_encoded_img = buffered.getvalue()
-    os.remove('imgdetect.jpg')
+    os.remove('imgdetect')
     response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
     response.headers["listIndex"]= listIndex
     response.headers['connection']='keep-alive'

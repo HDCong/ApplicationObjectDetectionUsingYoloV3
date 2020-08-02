@@ -39,6 +39,7 @@ dependencies:
   flappy_search_bar: 1.7.2
   dropdown_search: ^0.4.4
   font_awesome_flutter:
+  fluttertoast: ^7.0.2
 
 dev_dependencies:
   flutter_test:
