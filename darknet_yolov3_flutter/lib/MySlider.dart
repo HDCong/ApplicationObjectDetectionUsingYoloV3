@@ -151,7 +151,7 @@ class _MySliderBirdState extends State<MySliderBird> {
     );
   }
 
-  Widget _buildSwipe() {
+  Widget  _buildSwipe() {
     return Swiper(
       itemBuilder: _buildItem,
       itemCount: images.length,
@@ -367,7 +367,6 @@ class _MySliderBirdState extends State<MySliderBird> {
                 maxHeight: 300,
                 items: _BirdObject,
                 onChanged: (BirdObject d) {
-                  print(d.index);
                   _controller.move(d.index);
                 },
                 showSearchBox: true,
@@ -415,6 +414,7 @@ class _MySliderBirdState extends State<MySliderBird> {
               padding: EdgeInsets.all(16.0),
               child: _buildSwipe(),
             ),
+
           ],
         ),
       ),
