@@ -11,9 +11,8 @@ import io
 from PIL import Image
 import urllib.request
 
-confthres = 0.6
+confthres = 0.5
 nmsthres = 0.7
-
 
 # read label in .names file
 def readLabelFromFile(labelsDir):
@@ -108,7 +107,7 @@ def create_response_from_image(img,net,layer,labels,colors):
     response.headers['connection']='keep-alive'
     return response
 
-# Initialize the Flask application
+# Initialize the Flask application  
 app = Flask(__name__)
 
 # route http posts to this method
@@ -117,40 +116,30 @@ def main():
     print('Detection')
     img = request.files["image"].read();
     img = Image.open(io.BytesIO(img))
-    response = create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
-    return response
-
+    return create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
 @app.route('/detection/url', methods=['POST'])
 def mainUrlDetection():
     imgUrl= request.headers['url']
-    urllib.request.urlretrieve(imgUrl, "imgdetect")
-    img = Image.open("imgdetect")
-    response = create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
-    os.remove('imgdetect')
-    return response
+    img = Image.open(urllib.request.urlopen(imgUrl))
+    return create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
 
 @app.route('/custom', methods=['POST'])
 def main2():
     print('Custom')
     # Get file from post request
     img = request.files["image"].read();
-    # predict
     img = Image.open(io.BytesIO(img))
-    response = create_response_from_image(img,custom_nets,custom_layer,custom_labels,custom_colors)
-    return response
+    # predict
+    return create_response_from_image(img,custom_nets,custom_layer,custom_labels,custom_colors)
 
 @app.route('/custom/url', methods=['POST'])
 def main2UrlDetection():
     print('Custom request url')
-    # download from url
+    # read url from request
     imgUrl= request.headers['url']
-    urllib.request.urlretrieve(imgUrl, "imgdetect")
-    # predict image downloaded 
-    img = Image.open("imgdetect")
-    response = create_response_from_image(img,custom_nets,custom_layer,custom_labels,custom_colors)
-    # remove file saved
-    os.remove('imgdetect')
-    return response
+    # Retrive data image from url
+    img = Image.open(urllib.request.urlopen(imgUrl))
+    return create_response_from_image(img,custom_nets,custom_layer,custom_labels,custom_colors)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0',port=8558)
