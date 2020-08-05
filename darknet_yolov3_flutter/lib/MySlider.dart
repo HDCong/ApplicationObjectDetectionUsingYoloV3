@@ -287,14 +287,16 @@ class _MySliderBirdState extends State<MySliderBird> {
                                                   child:
                                                   new Text("Use this link"),
                                                   onPressed: () {
+
+                                                    if (_c.text.length > 5) {
+                                                      _urlPicture =
+                                                      new StringBuffer(
+                                                          _c.text);
+                                                      _base64 = null;
+                                                      _imageFile = null;
+                                                      hasSolution=false;
+                                                    }
                                                     setState(() {
-                                                      if (_c.text.length > 10) {
-                                                        _urlPicture =
-                                                        new StringBuffer(
-                                                            _c.text);
-                                                        _base64 = null;
-                                                        _imageFile = null;
-                                                      }
                                                     });
                                                     Navigator.pop(context);
                                                   },

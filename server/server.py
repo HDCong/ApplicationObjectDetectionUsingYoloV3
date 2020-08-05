@@ -11,7 +11,7 @@ import io
 from PIL import Image
 import urllib.request
 
-confthres = 0.5
+confthres = 0.6
 nmsthres = 0.7
 
 # read label in .names file
@@ -33,12 +33,11 @@ def generateColor(listLabel):
 # Use opencv dnn  
 def loadModel(cfgFile,weightsFile):
     netRead = cv2.dnn.readNetFromDarknet(cfgFile, weightsFile)
-    ln = netRead.getLayerNames()
-    ln = [ln[i[0] - 1] for i in netRead.getUnconnectedOutLayers()]
-    return netRead, ln
+    layerName = netRead.getLayerNames()
+    layerName = [layerName[i[0] - 1] for i in netRead.getUnconnectedOutLayers()]
+    return netRead, layerName
 
 def predict(image,net,layer,label,default_colors):
-
     (H, W) = image.shape[:2]
     #Detect object
     blob = cv2.dnn.blobFromImage(image, 0.00392,(416,416),(0,0,0),True,crop=False)
@@ -66,9 +65,7 @@ def predict(image,net,layer,label,default_colors):
     # Draw labels
     idxs = cv2.dnn.NMSBoxes(boxes, confidences, confthres,nmsthres)
     if len(idxs) > 0:
-        # loop over the indexes we are keeping
         for i in idxs.flatten():
-            # extract the bounding box coordinates
             (x, y) = (boxes[i][0], boxes[i][1])
             (w, h) = (boxes[i][2], boxes[i][3])
             text = "{}: {:.4f}".format(label[classIDs[i]], confidences[i])

@@ -1,7 +1,7 @@
 const String appLogo = 'assets/icon/icon.png';
 const String appFeatureImage = 'assets/icon/feature_store.jpg';
 //const String mIP="https://cd6af1146e91.ngrok.io/";
-const String mIP = "http://192.168.1.8:8558/";
+const String mIP = "http://192.168.1.7:8558/";
 const List<String> birdName = [
   'Chicken',
   'Eagle',

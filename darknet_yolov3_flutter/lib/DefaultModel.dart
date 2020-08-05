@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -71,6 +72,18 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
       });
       return;
     };
+    print(response.headers['listindex'].length);
+    if(response.headers['listindex'].length<1){
+      Fluttertoast.showToast(
+          msg: "No object detected",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.blueAccent,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
     await response.stream.toBytes().then((value) {
       setState(() {
         _base64 = value;
@@ -101,6 +114,19 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
       return;
     };
     print('Header: ');
+    print('length: '+response.headers['listindex'].length.toString());
+    if(response.headers['listindex'].length<1){
+      print('hhilllo');
+      Fluttertoast.showToast(
+          msg: "No object detected",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.blueAccent,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
     await response.stream.toBytes().then((value) {
       setState(() {
         _base64 = value;
@@ -146,13 +172,14 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
           height: 400,
         ).image,
       );
-    if (_urlPicture != null){
+    if (_urlPicture != null) {
       String url = _urlPicture.toString();
       try {
         return CachedNetworkImage(
           imageUrl: url,
+          fit: BoxFit.cover,
           errorWidget: (context, url, error) {
-            _urlPicture=null;
+            _urlPicture = null;
             return Image(
               image: AssetImage('assets/no_img.png'),
             );
@@ -172,7 +199,7 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
         height: 400,
       );
     return PhotoView(
-        imageProvider:Image.file(_imageFile,fit:BoxFit.cover).image);
+        imageProvider: Image.file(_imageFile, fit: BoxFit.cover).image);
   }
 
   @override

@@ -9,7 +9,7 @@ class BirdObject{
     return this?.mName.toLowerCase().contains(model?.mName.toLowerCase()) || this?.mContent.toLowerCase().contains(model?.mContent.toLowerCase());
   }
   bool isFiltered(String s){
-    return mContent.toLowerCase().contains(s);
+    return mContent.toLowerCase().contains(s.toLowerCase());
   }
   @override
   String toString() {
