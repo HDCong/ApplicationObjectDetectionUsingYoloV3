@@ -34,57 +34,44 @@ def generateColor(listLabel):
 # Use opencv dnn  
 def loadModel(cfgFile,weightsFile):
     netRead = cv2.dnn.readNetFromDarknet(cfgFile, weightsFile)
-    return netRead
+    ln = netRead.getLayerNames()
+    ln = [ln[i[0] - 1] for i in netRead.getUnconnectedOutLayers()]
+    return netRead, ln
 
-def predict(image,net,label,default_colors):
+def predict(image,net,layer,label,default_colors):
 
     (H, W) = image.shape[:2]
-    ln = net.getLayerNames()
-    ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+    #Detect object
     blob = cv2.dnn.blobFromImage(image, 0.00392,(416,416),(0,0,0),True,crop=False)
     net.setInput(blob)
-    layerOutputs = net.forward(ln)
-    # initialize our lists of detected bounding boxes, confidences, and
-    # class IDs, respectively
+    layerOutputs = net.forward(layer)
+    # Box dimensions
     boxes = []
     confidences = []
     classIDs = []
-    # loop over each of the layer outputs
     for output in layerOutputs:
-        # loop over each of the detections
         for detection in output:
-            # extract the class ID and confidence (i.e., probability) of
-            # the current object detection
             scores = detection[5:]
             classID = np.argmax(scores)
             confidence = scores[classID]
 
-            # filter out weak predictions by ensuring the detected
-            # probability is greater than the minimum probability
             if confidence > confthres:
                 box = detection[0:4] * np.array([W, H, W, H])
                 (centerX, centerY, width, height) = box.astype("int")
                 x = int(centerX - (width / 2))
                 y = int(centerY - (height / 2))
-
-                # update our list of bounding box coordinates, confidences,
-                # and class IDs
                 boxes.append([x, y, int(width), int(height)])
                 confidences.append(float(confidence))
                 classIDs.append(classID)
 
-    # apply non-maxima suppression to suppress weak, overlapping bounding
-    # boxes
-
-    idxs = cv2.dnn.NMSBoxes(boxes, confidences, confthres,
-                            nmsthres)
+    # Draw labels
+    idxs = cv2.dnn.NMSBoxes(boxes, confidences, confthres,nmsthres)
     if len(idxs) > 0:
         # loop over the indexes we are keeping
         for i in idxs.flatten():
             # extract the bounding box coordinates
             (x, y) = (boxes[i][0], boxes[i][1])
             (w, h) = (boxes[i][2], boxes[i][3])
-
             text = "{}: {:.4f}".format(label[classIDs[i]], confidences[i])
             bb.add(image,x,y,x+w,y+h,text,default_colors[classIDs[i]])
 
@@ -95,23 +82,32 @@ def predict(image,net,label,default_colors):
 ##### Call functions above
 default_labels=readLabelFromFile("./coco.names")
 default_colors=generateColor(default_labels)
-default_nets=loadModel("./yolov3.cfg","./yolov3.weights")
+default_nets,default_layer=loadModel("./yolov3.cfg","./yolov3.weights")
 
 ###### My custom model
 custom_labels=readLabelFromFile("./obj-2.names")
 custom_colors=generateColor(custom_labels)
-custom_nets=loadModel("./yolov3_bird.cfg","./yolov3_bird_21000.weights")
+custom_nets,custom_layer=loadModel("./yolov3_bird.cfg","./yolov3_bird_21000.weights")
 
-def handle_image_and_predict(img,net, labels,colors):
+def handle_image_and_predict(img,net,layer, labels,colors):
     np_img=np.array(img)    
     image=np_img.copy()
     image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-    res, listIndex=predict(image,net,labels,colors)
+    res, listIndex=predict(image,net,layer,labels,colors)
     image=cv2.cvtColor(res,cv2.COLOR_BGR2RGB)
     np_img=Image.fromarray(image)
     buffered = BytesIO()
     np_img.save(buffered, format="JPEG")
     return buffered, listIndex
+
+def create_response_from_image(img,net,layer,labels,colors):
+    buffered, listIndex = handle_image_and_predict(img,net,layer,labels,colors)
+    my_encoded_img = buffered.getvalue()
+    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
+    response.headers["listIndex"]= listIndex
+    response.headers['connection']='keep-alive'
+    return response
+
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -121,52 +117,39 @@ def main():
     print('Detection')
     img = request.files["image"].read();
     img = Image.open(io.BytesIO(img))
-
-    buffered, listIndex = handle_image_and_predict(img,default_nets,default_labels,default_colors)
-    my_encoded_img = buffered.getvalue()
-    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
-    response.headers['connection']='keep-alive'
-    response.headers["listIndex"]= listIndex
+    response = create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
     return response
 
 @app.route('/detection/url', methods=['POST'])
 def mainUrlDetection():
     imgUrl= request.headers['url']
     urllib.request.urlretrieve(imgUrl, "imgdetect")
-    
     img = Image.open("imgdetect")
-    buffered, listIndex = handle_image_and_predict(img,default_nets,default_labels,default_colors)
-    my_encoded_img = buffered.getvalue()
+    response = create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
     os.remove('imgdetect')
-    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
-    response.headers["listIndex"]= listIndex
-    response.headers['connection']='keep-alive'
     return response
 
 @app.route('/custom', methods=['POST'])
 def main2():
     print('Custom')
+    # Get file from post request
     img = request.files["image"].read();
+    # predict
     img = Image.open(io.BytesIO(img))
-    buffered, listIndex = handle_image_and_predict(img,custom_nets,custom_labels,custom_colors)
-    my_encoded_img = buffered.getvalue()
-    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
-    response.headers['connection']='keep-alive'
-    response.headers["listIndex"]=listIndex
+    response = create_response_from_image(img,custom_nets,custom_layer,custom_labels,custom_colors)
     return response
 
 @app.route('/custom/url', methods=['POST'])
 def main2UrlDetection():
     print('Custom request url')
+    # download from url
     imgUrl= request.headers['url']
     urllib.request.urlretrieve(imgUrl, "imgdetect")
+    # predict image downloaded 
     img = Image.open("imgdetect")
-    buffered, listIndex = handle_image_and_predict(img,custom_nets,custom_labels,custom_colors)
-    my_encoded_img = buffered.getvalue()
+    response = create_response_from_image(img,custom_nets,custom_layer,custom_labels,custom_colors)
+    # remove file saved
     os.remove('imgdetect')
-    response =Response(response=my_encoded_img, status=200,mimetype="image/jpeg")
-    response.headers["listIndex"]= listIndex
-    response.headers['connection']='keep-alive'
     return response
 
 if __name__ == '__main__':
