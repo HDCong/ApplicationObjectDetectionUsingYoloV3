@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 import cv2
 import os
-import my_bb as bb
+from bounding_box import bounding_box as bb
 from flask import Flask, request, Response, jsonify
 import io as StringIO
 import base64
@@ -11,8 +11,8 @@ import io
 from PIL import Image
 import urllib.request
 
-confthres = 0.6
-nmsthres = 0.7
+CONFIDENCE = 0.6
+NMS_THRES = 0.7
 
 # read label in .names file
 def readLabelFromFile(labelsDir):
@@ -31,14 +31,14 @@ def generateColor(listLabel):
         res.append(color[x%len(color)])
     return res
 # Use opencv dnn  
-def loadModel(cfgFile,weightsFile):
+def loadNetAndLayerName(cfgFile,weightsFile):
     netRead = cv2.dnn.readNetFromDarknet(cfgFile, weightsFile)
     layerName = netRead.getLayerNames()
     layerName = [layerName[i[0] - 1] for i in netRead.getUnconnectedOutLayers()]
     return netRead, layerName
 
 def predict(image,net,layer,label,default_colors):
-    (H, W) = image.shape[:2]
+    (imageHeight, imageWidth) = image.shape[:2]
     #Detect object
     blob = cv2.dnn.blobFromImage(image, 0.00392,(416,416),(0,0,0),True,crop=False)
     net.setInput(blob)
@@ -53,17 +53,23 @@ def predict(image,net,layer,label,default_colors):
             classID = np.argmax(scores)
             confidence = scores[classID]
 
-            if confidence > confthres:
-                box = detection[0:4] * np.array([W, H, W, H])
+            if confidence > CONFIDENCE:
+                box = detection[0:4] * np.array([imageWidth, imageHeight, imageWidth, imageHeight])
                 (centerX, centerY, width, height) = box.astype("int")
+                #possible make value < 0
                 x = int(centerX - (width / 2))
                 y = int(centerY - (height / 2))
+                print(x,y,width, height)
+                if(y<0):
+                    y=0
+                if(x<0):
+                    x=0
                 boxes.append([x, y, int(width), int(height)])
                 confidences.append(float(confidence))
                 classIDs.append(classID)
 
     # Draw labels
-    idxs = cv2.dnn.NMSBoxes(boxes, confidences, confthres,nmsthres)
+    idxs = cv2.dnn.NMSBoxes(boxes, confidences, CONFIDENCE,NMS_THRES)
     if len(idxs) > 0:
         for i in idxs.flatten():
             (x, y) = (boxes[i][0], boxes[i][1])
@@ -78,15 +84,15 @@ def predict(image,net,layer,label,default_colors):
 ##### Call functions above
 default_labels=readLabelFromFile("./coco.names")
 default_colors=generateColor(default_labels)
-default_nets,default_layer=loadModel("./yolov3.cfg","./yolov3.weights")
+default_nets,default_layer=loadNetAndLayerName("./yolov3.cfg","./yolov3.weights")
 
 ###### My custom model
-custom_labels=readLabelFromFile("./obj-2.names")
+custom_labels=readLabelFromFile("./bird_labels.txt")
 custom_colors=generateColor(custom_labels)
-custom_nets,custom_layer=loadModel("./yolov3_bird.cfg","./yolov3_bird_21000.weights")
+custom_nets,custom_layer=loadNetAndLayerName("./yolov3_bird.cfg","./yolov3_bird_21000.weights")
 
 def handle_image_and_predict(img,net,layer, labels,colors):
-    np_img=np.array(img)    
+    np_img  =np.array(img)    
     image=np_img.copy()
     image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
     res, listIndex=predict(image,net,layer,labels,colors)
