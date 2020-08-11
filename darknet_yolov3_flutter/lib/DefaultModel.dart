@@ -33,6 +33,8 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
   StringBuffer _urlPicture;
   Uri apiUrl = Uri.parse(mIP + "detection");
 
+  bool _visible = true;
+
   void _openGallery(BuildContext context) async {
     var pickedImage = await ImagePicker.pickImage(source: ImageSource.gallery);
     this.setState(() {
@@ -54,11 +56,12 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
   }
 
   _makePostRequestURL(BuildContext context, String imgUrl) async {
+    print('url');
     if (imgUrl == null) return;
     setState(() {
       pr.show();
     });
-    Uri uriUrl = Uri.parse(mIP+'detection/url');
+    Uri uriUrl = Uri.parse(apiUrl.toString() + '/url');
     final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
 
     Map<String, String> map1 = {'url': imgUrl};
@@ -220,6 +223,8 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
           color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600),
     );
     _c = new TextEditingController();
+    TextEditingController _cServer = new TextEditingController()..text="192.168.";
+
     return Scaffold(
       body: Stack(
         children: <Widget>[
@@ -233,6 +238,71 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
                     colors: [color1, color2],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight)),
+          ),
+          Row(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 15),
+                child: FloatingActionButton(
+                  foregroundColor: Colors.black54,
+                  backgroundColor: Colors.yellow[600],
+                  elevation: 2.0,
+                  child: Icon(Icons.settings_remote),
+                  onPressed: () {
+//                          print('Clicked');
+                    setState(() {
+                      _visible = !_visible;
+                    });
+                  },
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 15,left:10),
+                child: AnimatedOpacity(
+                  // If the widget is visible, animate to 0.0 (invisible).
+                  // If the widget is hidden, animate to 1.0 (fully visible).
+                    opacity: _visible ? 1.0 : 0.0,
+                    duration: Duration(milliseconds: 500),
+                    // The green box must be a child of the AnimatedOpacity widget.
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 200.0,
+                          height: 50.0,
+                          color:Colors.white,
+                          child:TextField(
+                            decoration:
+                            new InputDecoration(
+                                hintText:
+                                "API Address"),
+                            controller: _cServer,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(left:10),
+                          child: FloatingActionButton(
+                            foregroundColor: Colors.black54,
+                            backgroundColor: Colors.yellow[600],
+                            elevation: 2.0,
+                            child: Icon(FontAwesomeIcons.arrowRight),
+                            onPressed: () {
+//                          print('Clicked');
+                              setState(() {
+                                if (_cServer.text.length > 5) {
+                                  apiUrl = Uri.parse("http://" + _cServer.text+ ":8558/detection");
+                                  _visible = !_visible;
+                                }
+                                print(apiUrl.toString());
+                              });
+                            },
+                          ),
+                        ),
+
+                      ],
+                    )
+                ),
+              ),
+            ],
           ),
           Container(
             margin: const EdgeInsets.only(top: 80),

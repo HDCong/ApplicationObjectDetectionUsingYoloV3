@@ -25,7 +25,7 @@ class _MySliderBirdState extends State<MySliderBird> {
   final List<String> images = birdImg;
   final List<String> contentImgs = birdInfor;
   final List<String> name = birdName;
-
+  bool _visible = true;
   List<BirdObject> _BirdObject;
   StringBuffer _urlPicture;
   final Color color1 = Color.fromRGBO(252, 119, 3, 1);
@@ -39,14 +39,14 @@ class _MySliderBirdState extends State<MySliderBird> {
   Uint8List _base64;
   bool hasSolution;
   Uri apiUrl = Uri.parse(mIP + "custom");
+
 //  Uri apiUrl = Uri.parse(mIP + "detection");
   TextEditingController numberController = new TextEditingController();
 
   void intiForbirdDetails() {
     _BirdObject = new List<BirdObject>();
-    for (int i = 0; i < images.length; i++){
+    for (int i = 0; i < images.length; i++) {
       _BirdObject.add(new BirdObject(i, name[i], images[i], contentImgs[i]));
-
     }
   }
 
@@ -142,7 +142,8 @@ class _MySliderBirdState extends State<MySliderBird> {
                       bottomRight: Radius.circular(10.0))),
               child: ListTile(
                 title: Text(_BirdObject[_indexObjectDetected[index]].mName),
-                subtitle: Text(_BirdObject[_indexObjectDetected[index]].mContent),
+                subtitle:
+                    Text(_BirdObject[_indexObjectDetected[index]].mContent),
               ),
             ),
           ),
@@ -151,7 +152,7 @@ class _MySliderBirdState extends State<MySliderBird> {
     );
   }
 
-  Widget  _buildSwipe() {
+  Widget _buildSwipe() {
     return Swiper(
       itemBuilder: _buildItem,
       itemCount: images.length,
@@ -188,10 +189,10 @@ class _MySliderBirdState extends State<MySliderBird> {
       decoration: !isSelected
           ? null
           : BoxDecoration(
-        border: Border.all(color: Theme.of(context).primaryColor),
-        borderRadius: BorderRadius.circular(5),
-        color: Colors.white,
-      ),
+              border: Border.all(color: Theme.of(context).primaryColor),
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.white,
+            ),
       child: ListTile(
         selected: isSelected,
         title: Text(item.mName),
@@ -206,6 +207,7 @@ class _MySliderBirdState extends State<MySliderBird> {
   @override
   Widget build(BuildContext context) {
     _c = new TextEditingController();
+    TextEditingController _cServer = new TextEditingController()..text="192.168.";
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -223,6 +225,71 @@ class _MySliderBirdState extends State<MySliderBird> {
                           colors: [color1, color2],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight)),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 15),
+                      child: FloatingActionButton(
+                        foregroundColor: Colors.black54,
+                        backgroundColor: Colors.yellow[600],
+                        elevation: 2.0,
+                        child: Icon(Icons.settings_remote),
+                        onPressed: () {
+//                          print('Clicked');
+                          setState(() {
+                            _visible = !_visible;
+                          });
+                        },
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 15,left:10),
+                      child: AnimatedOpacity(
+                        // If the widget is visible, animate to 0.0 (invisible).
+                        // If the widget is hidden, animate to 1.0 (fully visible).
+                        opacity: _visible ? 1.0 : 0.0,
+                        duration: Duration(milliseconds: 500),
+                        // The green box must be a child of the AnimatedOpacity widget.
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 200.0,
+                              height: 50.0,
+                              color:Colors.white,
+                              child:TextField(
+                                decoration:
+                                new InputDecoration(
+                                    hintText:
+                                    "API Address"),
+                                controller: _cServer,
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(left:10),
+                              child: FloatingActionButton(
+                                foregroundColor: Colors.black54,
+                                backgroundColor: Colors.yellow[600],
+                                elevation: 2.0,
+                                child: Icon(FontAwesomeIcons.arrowRight),
+                                onPressed: () {
+//                          print('Clicked');
+                                  setState(() {
+                                    if (_cServer.text.length > 5) {
+                                       apiUrl = Uri.parse("http://" + _cServer.text+ ":8558/custom");
+                                      _visible = !_visible;
+                                    }
+                                    print(apiUrl.toString());
+                                  });
+                                },
+                              ),
+                            ),
+
+                          ],
+                        )
+                      ),
+                    ),
+                  ],
                 ),
                 Container(
                     margin: const EdgeInsets.only(top: 80),
@@ -278,26 +345,24 @@ class _MySliderBirdState extends State<MySliderBird> {
                                               children: <Widget>[
                                                 new TextField(
                                                   decoration:
-                                                  new InputDecoration(
-                                                      hintText:
-                                                      "Image url"),
+                                                      new InputDecoration(
+                                                          hintText:
+                                                              "Image url"),
                                                   controller: _c,
                                                 ),
                                                 new FlatButton(
                                                   child:
-                                                  new Text("Use this link"),
+                                                      new Text("Use this link"),
                                                   onPressed: () {
-
-                                                    if (_c.text.length > 5) {
+                                                    if (_c.text.length > 5 && Uri.parse(_c.text).isAbsolute) {
                                                       _urlPicture =
-                                                      new StringBuffer(
-                                                          _c.text);
+                                                          new StringBuffer(
+                                                              _c.text);
                                                       _base64 = null;
                                                       _imageFile = null;
-                                                      hasSolution=false;
+                                                      hasSolution = false;
                                                     }
-                                                    setState(() {
-                                                    });
+                                                    setState(() {});
                                                     Navigator.pop(context);
                                                   },
                                                 )
@@ -326,7 +391,6 @@ class _MySliderBirdState extends State<MySliderBird> {
                                 ),
                                 backgroundColor: Colors.white,
                                 onPressed: () {
-
                                   if (_urlPicture != null)
                                     _makePostRequestURL(
                                         context, _urlPicture.toString());
@@ -351,16 +415,16 @@ class _MySliderBirdState extends State<MySliderBird> {
             hasSolution == false
                 ? Container()
                 : Container(
-              height: 340,
-              color: Colors.white,
-              padding: EdgeInsets.all(16.0),
-              child: _buildSwipe2(),
-            ),
+                    height: 340,
+                    color: Colors.white,
+                    padding: EdgeInsets.all(16.0),
+                    child: _buildSwipe2(),
+                  ),
             SizedBox(height: 30.0),
             Text(
               "Discovery or Search",
               style:
-              DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2.0),
+                  DefaultTextStyle.of(context).style.apply(fontSizeFactor: 2.0),
             ),
             Container(
               padding: EdgeInsets.all(16.0),
@@ -416,7 +480,6 @@ class _MySliderBirdState extends State<MySliderBird> {
               padding: EdgeInsets.all(16.0),
               child: _buildSwipe(),
             ),
-
           ],
         ),
       ),
@@ -474,7 +537,7 @@ class _MySliderBirdState extends State<MySliderBird> {
     print(response.headers['listindex']);
     if (response.headers['listindex'].length > 0) {
       List<int> listObject =
-      response.headers['listindex'].split(',').map(int.parse).toList();
+          response.headers['listindex'].split(',').map(int.parse).toList();
       _indexObjectDetected = listObject;
       hasSolution = true;
       setState(() {});
@@ -487,8 +550,7 @@ class _MySliderBirdState extends State<MySliderBird> {
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.blueAccent,
           textColor: Colors.white,
-          fontSize: 16.0
-      );
+          fontSize: 16.0);
     }
 
     await response.stream.toBytes().then((value) {
@@ -508,11 +570,11 @@ class _MySliderBirdState extends State<MySliderBird> {
       pr.show();
     });
     var stream =
-    new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
+        new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
     final imageUploadRequest = http.MultipartRequest('POST', apiUrl);
     var length = await imageFile.length();
     var multipartFile =
-    new http.MultipartFile('image', stream, length, filename: 'image');
+        new http.MultipartFile('image', stream, length, filename: 'image');
     imageUploadRequest.files.add(multipartFile);
 
     final http.StreamedResponse response = await imageUploadRequest.send();
@@ -530,13 +592,11 @@ class _MySliderBirdState extends State<MySliderBird> {
     print(response.headers['listindex']);
     if (response.headers['listindex'].length > 0) {
       List<int> listObject =
-      response.headers['listindex'].split(',').map(int.parse).toList();
+          response.headers['listindex'].split(',').map(int.parse).toList();
       _indexObjectDetected = listObject;
       for (int x in listObject) print(x);
       hasSolution = true;
-      setState(() {
-
-      });
+      setState(() {});
     } else {
       _indexObjectDetected = new List<int>();
       Fluttertoast.showToast(
@@ -546,8 +606,7 @@ class _MySliderBirdState extends State<MySliderBird> {
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.blueAccent,
           textColor: Colors.white,
-          fontSize: 16.0
-      );
+          fontSize: 16.0);
     }
 
     await response.stream.toBytes().then((value) {
@@ -567,22 +626,22 @@ class _MySliderBirdState extends State<MySliderBird> {
             title: Text('Choose your image'),
             content: SingleChildScrollView(
                 child: ListBody(
-                  children: <Widget>[
-                    GestureDetector(
-                      child: Text("Gallery"),
-                      onTap: () {
-                        _openGallery(context);
-                      },
-                    ),
-                    Padding(padding: EdgeInsets.all(8)),
-                    GestureDetector(
-                      child: Text("Camera"),
-                      onTap: () {
-                        _openCamera(context);
-                      },
-                    )
-                  ],
-                )),
+              children: <Widget>[
+                GestureDetector(
+                  child: Text("Gallery"),
+                  onTap: () {
+                    _openGallery(context);
+                  },
+                ),
+                Padding(padding: EdgeInsets.all(8)),
+                GestureDetector(
+                  child: Text("Camera"),
+                  onTap: () {
+                    _openCamera(context);
+                  },
+                )
+              ],
+            )),
           );
         });
   }

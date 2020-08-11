@@ -70,6 +70,7 @@ def predict(image,net,layer,label,default_colors):
 
     # Draw labels
     idxs = cv2.dnn.NMSBoxes(boxes, confidences, CONFIDENCE,NMS_THRES)
+    
     if len(idxs) > 0:
         for i in idxs.flatten():
             (x, y) = (boxes[i][0], boxes[i][1])
@@ -110,10 +111,9 @@ def create_response_from_image(img,net,layer,labels,colors):
     response.headers['connection']='keep-alive'
     return response
 
-# Initialize the Flask application  
+
 app = Flask(__name__)
 
-# route http posts to this method
 @app.route('/detection', methods=['POST'])
 def main():
     print('Detection')
@@ -122,6 +122,7 @@ def main():
     return create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
 @app.route('/detection/url', methods=['POST'])
 def mainUrlDetection():
+    print('detection url')
     imgUrl= request.headers['url']
     img = Image.open(urllib.request.urlopen(imgUrl))
     return create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
