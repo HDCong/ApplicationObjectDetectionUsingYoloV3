@@ -230,7 +230,7 @@ class _MySliderBirdState extends State<MySliderBird> {
                 Row(
                   children: [
                     Container(
-                      margin: const EdgeInsets.only(top: 15),
+                      margin: const EdgeInsets.only(top: 25),
                       child: FloatingActionButton(
                         foregroundColor: Colors.black54,
                         backgroundColor: Colors.yellow[600],
@@ -263,7 +263,7 @@ class _MySliderBirdState extends State<MySliderBird> {
                                   decoration: new InputDecoration(
                                       hintText: "API Address"),
                                   controller: _cServer,
-                                  onSubmitted: (value){
+                                  onSubmitted: (value) {
                                     setState(() {
                                       if (_cServer.text.length > 5) {
                                         apiUrl = Uri.parse("http://" +
@@ -359,10 +359,27 @@ class _MySliderBirdState extends State<MySliderBird> {
                                                           hintText:
                                                               "Image url"),
                                                   controller: _c,
+                                                  onSubmitted: (value) {
+                                                    setState(() {
+                                                      if (_c.text.length > 5 &&
+                                                          Uri.parse(_c.text)
+                                                              .isAbsolute) {
+                                                        _urlPicture =
+                                                            new StringBuffer(
+                                                                _c.text);
+                                                        _base64 = null;
+                                                        _imageFile = null;
+                                                        hasSolution = false;
+                                                      }
+                                                      Navigator.pop(context);
+                                                    });
+                                                  },
                                                 ),
                                                 new FlatButton(
                                                   child:
                                                       new Text("Use this link"),
+                                                  color: Colors.lightBlueAccent,
+                                                  padding: EdgeInsets.all(10.0),
                                                   onPressed: () {
                                                     if (_c.text.length > 5 &&
                                                         Uri.parse(_c.text)
