@@ -518,9 +518,8 @@ class _MySliderBirdState extends State<MySliderBird> {
     Uri uriUrl = Uri.parse(apiUrl.toString() + '/url');
 
     final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
-
-    Map<String, String> map1 = {'url': imgUrl};
-    imageUploadRequest.headers.addAll(map1);
+    imageUploadRequest.fields['url'] = imgUrl;
+    print(imageUploadRequest.fields.toString());
     final http.StreamedResponse response = await imageUploadRequest.send();
     print(response.headers);
     print('statusCode => ${response.statusCode}');

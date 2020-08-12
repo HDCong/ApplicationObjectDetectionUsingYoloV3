@@ -123,7 +123,7 @@ def main():
 @app.route('/detection/url', methods=['POST'])
 def mainUrlDetection():
     print('detection url')
-    imgUrl= request.headers['url']
+    imgUrl= request.form.to_dict(flat=False)['url'][0]
     img = Image.open(urllib.request.urlopen(imgUrl))
     return create_response_from_image(img,default_nets,default_layer,default_labels,default_colors)
 
@@ -139,9 +139,7 @@ def main2():
 @app.route('/custom/url', methods=['POST'])
 def main2UrlDetection():
     print('Custom request url')
-    # read url from request
-    imgUrl= request.headers['url']
-    # Retrive data image from url
+    imgUrl= request.form.to_dict(flat=False)['url'][0]
     img = Image.open(urllib.request.urlopen(imgUrl))
     return create_response_from_image(img,custom_nets,custom_layer,custom_labels,custom_colors)
 
