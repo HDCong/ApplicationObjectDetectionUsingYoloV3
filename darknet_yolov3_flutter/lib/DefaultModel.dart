@@ -25,11 +25,13 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
   File _imageFile;
   ProgressDialog pr;
   Uint8List _base64;
+
 //  static String _mIP = "http://192.168.1.4:8558/";
 
   final Color color1 = Color.fromRGBO(252, 119, 3, 1);
   final Color color2 = Color.fromRGBO(252, 244, 3, 1);
   TextEditingController _c;
+  TextEditingController _cServer;
   StringBuffer _urlPicture;
   Uri apiUrl = Uri.parse(mIP + "detection");
 
@@ -67,14 +69,15 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
     final http.StreamedResponse response = await imageUploadRequest.send();
     print(response.headers);
     print('statusCode => ${response.statusCode}');
-    if(response.statusCode>=400) {
+    if (response.statusCode >= 400) {
       setState(() {
         pr.hide();
       });
       return;
-    };
+    }
+    ;
     print(response.headers['listindex'].length);
-    if(response.headers['listindex'].length<1){
+    if (response.headers['listindex'].length < 1) {
       Fluttertoast.showToast(
           msg: "No object detected",
           toastLength: Toast.LENGTH_SHORT,
@@ -82,8 +85,7 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.blueAccent,
           textColor: Colors.white,
-          fontSize: 16.0
-      );
+          fontSize: 16.0);
     }
     await response.stream.toBytes().then((value) {
       setState(() {
@@ -108,15 +110,16 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
 
     final http.StreamedResponse response = await imageUploadRequest.send();
     print('statusCode => ${response.statusCode}');
-    if(response.statusCode>=400) {
+    if (response.statusCode >= 400) {
       setState(() {
         pr.hide();
       });
       return;
-    };
+    }
+    ;
     print('Header: ');
-    print('length: '+response.headers['listindex'].length.toString());
-    if(response.headers['listindex'].length<1){
+    print('length: ' + response.headers['listindex'].length.toString());
+    if (response.headers['listindex'].length < 1) {
       print('hhilllo');
       Fluttertoast.showToast(
           msg: "No object detected",
@@ -125,8 +128,7 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.blueAccent,
           textColor: Colors.white,
-          fontSize: 16.0
-      );
+          fontSize: 16.0);
     }
     await response.stream.toBytes().then((value) {
       setState(() {
@@ -164,7 +166,7 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
         });
   }
 
-  Widget _decideImage({Uint8List base = null,BuildContext context}) {
+  Widget _decideImage({Uint8List base = null, BuildContext context}) {
     if (_base64 != null)
       return PhotoView(
         imageProvider: new Image.memory(
@@ -221,195 +223,216 @@ class _DefautModelScreenState extends State<DefautModelScreen> {
           color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600),
     );
     _c = new TextEditingController();
-    TextEditingController _cServer = new TextEditingController()..text="192.168.";
+    _cServer = new TextEditingController()..text = "192.168.";
 
     return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          Container(
-            height: 360,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(50.0),
-                    bottomRight: Radius.circular(50.0)),
-                gradient: LinearGradient(
-                    colors: [color1, color2],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight)),
-          ),
-          Row(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 15),
-                child: FloatingActionButton(
-                  foregroundColor: Colors.black54,
-                  backgroundColor: Colors.yellow[600],
-                  elevation: 2.0,
-                  child: Icon(Icons.settings_remote),
-                  onPressed: () {
-//                          print('Clicked');
-                    setState(() {
-                      _visible = !_visible;
-                    });
-                  },
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 15,left:10),
-                child: AnimatedOpacity(
-                  // If the widget is visible, animate to 0.0 (invisible).
-                  // If the widget is hidden, animate to 1.0 (fully visible).
-                    opacity: _visible ? 1.0 : 0.0,
-                    duration: Duration(milliseconds: 500),
-                    // The green box must be a child of the AnimatedOpacity widget.
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 200.0,
-                          height: 50.0,
-                          color:Colors.white,
-                          child:TextField(
-                            decoration:
-                            new InputDecoration(
-                                hintText:
-                                "API Address"),
-                            controller: _cServer,
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(left:10),
-                          child: FloatingActionButton(
-                            foregroundColor: Colors.black54,
-                            backgroundColor: Colors.yellow[600],
-                            elevation: 2.0,
-                            child: Icon(FontAwesomeIcons.arrowRight),
-                            onPressed: () {
-//                          print('Clicked');
-                              setState(() {
-                                if (_cServer.text.length > 5) {
-                                  apiUrl = Uri.parse("http://" + _cServer.text+ ":8558/detection");
-                                  _visible = !_visible;
-                                }
-                                print(apiUrl.toString());
-                              });
-                            },
-                          ),
-                        ),
-
-                      ],
-                    )
-                ),
-              ),
-            ],
-          ),
-          Container(
-            margin: const EdgeInsets.only(top: 80),
-            child: Column(
+      body:SingleChildScrollView(
+        child:  Column(
+          children: [
+            Stack(
               children: <Widget>[
-                Text(
-                  "Default model detection",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontStyle: FontStyle.italic),
-                ),
-                SizedBox(height: 20.0),
-                Expanded(
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                          height: double.infinity,
-                          margin: const EdgeInsets.only(
-                              left: 30.0, right: 30.0, top: 10.0),
-                          child: ClipRRect(
-                              borderRadius: BorderRadius.circular(30.0),
-                              child: _decideImage(base: _base64)))
-                    ],
-                  ),
-                ),
-                SizedBox(height: 10.0),
                 Container(
-                  child: Stack(
+                  height: 360,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(50.0),
+                          bottomRight: Radius.circular(50.0)),
+                      gradient: LinearGradient(
+                          colors: [color1, color2],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight)),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 15),
+                      child: FloatingActionButton(
+                        foregroundColor: Colors.black54,
+                        backgroundColor: Colors.yellow[600],
+                        elevation: 2.0,
+                        child: Icon(Icons.settings_remote),
+                        onPressed: () {
+//                          print('Clicked');
+                          setState(() {
+                            _visible = !_visible;
+                          });
+                        },
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 15, left: 10),
+                      child: AnimatedOpacity(
+                        // If the widget is visible, animate to 0.0 (invisible).
+                        // If the widget is hidden, animate to 1.0 (fully visible).
+                          opacity: _visible ? 1.0 : 0.0,
+                          duration: Duration(milliseconds: 500),
+                          // The green box must be a child of the AnimatedOpacity widget.
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 200.0,
+                                height: 50.0,
+                                color: Colors.white,
+                                child: TextField(
+                                  textInputAction: TextInputAction.go,
+                                  decoration: new InputDecoration(
+                                      hintText: "API Address"),
+                                  controller: _cServer,
+                                  onSubmitted: (value){
+                                    setState(() {
+                                      if (_cServer.text.length > 5) {
+                                        apiUrl = Uri.parse("http://" +
+                                            _cServer.text +
+                                            ":8558/detection");
+                                        _visible = !_visible;
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(left: 10),
+                                child: FloatingActionButton(
+                                  foregroundColor: Colors.black54,
+                                  backgroundColor: Colors.yellow[600],
+                                  elevation: 2.0,
+                                  child: Icon(FontAwesomeIcons.arrowRight),
+                                  onPressed: () {
+//                          print('Clicked');
+                                    setState(() {
+                                      if (_cServer.text.length > 5) {
+                                        apiUrl = Uri.parse("http://" +
+                                            _cServer.text +
+                                            ":8558/detection");
+                                        _visible = !_visible;
+                                      }
+                                      print(apiUrl.toString());
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          )),
+                    ),
+                  ],
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 80),
+                  height: 550,
+                  child: Column(
                     children: <Widget>[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 5.0, horizontal: 16.0),
-                        margin: const EdgeInsets.only(
-                            top: 30, left: 20.0, right: 20.0, bottom: 20.0),
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [color1, color2],
-                            ),
-                            borderRadius: BorderRadius.circular(30.0)),
-                        child: Row(
+                      Text(
+                        "Default model detection",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontStyle: FontStyle.italic),
+                      ),
+                      SizedBox(height: 20.0),
+                      Expanded(
+                        child: Stack(
                           children: <Widget>[
-                            IconButton(
-                              color: Colors.white,
-                              icon: Icon(FontAwesomeIcons.link),
-                              onPressed: () {
-                                showDialog(
-                                    child: new Dialog(
-                                      child: new Column(
-                                        children: <Widget>[
-                                          new TextField(
-                                            decoration: new InputDecoration(
-                                                hintText: "Image url"),
-                                            controller: _c,
-                                          ),
-                                          new FlatButton(
-                                            child: new Text("Use this link"),
-                                            onPressed: () {
-                                              setState(() {
-                                                if(_c.text.length>10 && Uri.parse(_c.text).isAbsolute)
-                                                {
-                                                  _urlPicture =
-                                                  new StringBuffer(_c.text);
-                                                  _base64=null;
-                                                  _imageFile=null;
-                                                }
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                    context: context);
-                              },
-                            ),
-                            Spacer(),
-                            IconButton(
-                              color: Colors.white,
-                              icon: Icon(Icons.image),
-                              onPressed: () {
-                                _showChoiceDiaglog(context);
-                              },
-                            ),
+                            Container(
+                                height: double.infinity,
+                                margin: const EdgeInsets.only(
+                                    left: 30.0, right: 30.0, top: 10.0),
+                                child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    child: _decideImage(base: _base64)))
                           ],
                         ),
                       ),
-                      Center(
-                        child: FloatingActionButton(
-                          child: Icon(
-                            Icons.remove_red_eye,
-                            color: Colors.pink,
-                          ),
-                          backgroundColor: Colors.white,
-                          onPressed: () {
-                            if(_urlPicture!=null) _makePostRequestURL(context, _urlPicture.toString());
-                            else
-                              _makePostRequest(context, _imageFile);
-                          },
+                      SizedBox(height: 10.0),
+                      Container(
+                        child: Stack(
+                          children: <Widget>[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 5.0, horizontal: 16.0),
+                              margin: const EdgeInsets.only(
+                                  top: 30, left: 20.0, right: 20.0, bottom: 20.0),
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [color1, color2],
+                                  ),
+                                  borderRadius: BorderRadius.circular(30.0)),
+                              child: Row(
+                                children: <Widget>[
+                                  IconButton(
+                                    color: Colors.white,
+                                    icon: Icon(FontAwesomeIcons.link),
+                                    onPressed: () {
+                                      showDialog(
+                                          child: new Dialog(
+                                            child: new Column(
+                                              children: <Widget>[
+                                                new TextField(
+                                                  decoration: new InputDecoration(
+                                                      hintText: "Image url"),
+                                                  controller: _c,
+                                                ),
+                                                new FlatButton(
+                                                  child: new Text("Use this link"),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      if (_c.text.length > 10 &&
+                                                          Uri.parse(_c.text)
+                                                              .isAbsolute) {
+                                                        _urlPicture =
+                                                        new StringBuffer(_c.text);
+                                                        _base64 = null;
+                                                        _imageFile = null;
+                                                      }
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                          context: context);
+                                    },
+                                  ),
+                                  Spacer(),
+                                  IconButton(
+                                    color: Colors.white,
+                                    icon: Icon(Icons.image),
+                                    onPressed: () {
+                                      _showChoiceDiaglog(context);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Center(
+                              child: FloatingActionButton(
+                                child: Icon(
+                                  Icons.remove_red_eye,
+                                  color: Colors.pink,
+                                ),
+                                backgroundColor: Colors.white,
+                                onPressed: () {
+                                  if (_urlPicture != null)
+                                    _makePostRequestURL(
+                                        context, _urlPicture.toString());
+                                  else
+                                    _makePostRequest(context, _imageFile);
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      )
                     ],
                   ),
-                )
+                ),
+
               ],
             ),
-          ),
-        ],
-      ),
+          ],
+        )
+      )
+
     );
   }
 }

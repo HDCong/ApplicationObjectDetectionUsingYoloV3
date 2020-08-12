@@ -207,7 +207,8 @@ class _MySliderBirdState extends State<MySliderBird> {
   @override
   Widget build(BuildContext context) {
     _c = new TextEditingController();
-    TextEditingController _cServer = new TextEditingController()..text="192.168.";
+    TextEditingController _cServer = new TextEditingController()
+      ..text = "192.168.";
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -244,50 +245,59 @@ class _MySliderBirdState extends State<MySliderBird> {
                       ),
                     ),
                     Container(
-                      margin: const EdgeInsets.only(top: 15,left:10),
+                      margin: const EdgeInsets.only(top: 15, left: 10),
                       child: AnimatedOpacity(
-                        // If the widget is visible, animate to 0.0 (invisible).
-                        // If the widget is hidden, animate to 1.0 (fully visible).
-                        opacity: _visible ? 1.0 : 0.0,
-                        duration: Duration(milliseconds: 500),
-                        // The green box must be a child of the AnimatedOpacity widget.
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 200.0,
-                              height: 50.0,
-                              color:Colors.white,
-                              child:TextField(
-                                decoration:
-                                new InputDecoration(
-                                    hintText:
-                                    "API Address"),
-                                controller: _cServer,
+                          // If the widget is visible, animate to 0.0 (invisible).
+                          // If the widget is hidden, animate to 1.0 (fully visible).
+                          opacity: _visible ? 1.0 : 0.0,
+                          duration: Duration(milliseconds: 500),
+                          // The green box must be a child of the AnimatedOpacity widget.
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 200.0,
+                                height: 50.0,
+                                color: Colors.white,
+                                child: TextField(
+                                  textInputAction: TextInputAction.go,
+                                  decoration: new InputDecoration(
+                                      hintText: "API Address"),
+                                  controller: _cServer,
+                                  onSubmitted: (value){
+                                    setState(() {
+                                      if (_cServer.text.length > 5) {
+                                        apiUrl = Uri.parse("http://" +
+                                            _cServer.text +
+                                            ":8558/custom");
+                                        _visible = !_visible;
+                                      }
+                                    });
+                                  },
+                                ),
                               ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(left:10),
-                              child: FloatingActionButton(
-                                foregroundColor: Colors.black54,
-                                backgroundColor: Colors.yellow[600],
-                                elevation: 2.0,
-                                child: Icon(FontAwesomeIcons.arrowRight),
-                                onPressed: () {
+                              Container(
+                                margin: const EdgeInsets.only(left: 10),
+                                child: FloatingActionButton(
+                                  foregroundColor: Colors.black54,
+                                  backgroundColor: Colors.yellow[600],
+                                  elevation: 2.0,
+                                  child: Icon(FontAwesomeIcons.arrowRight),
+                                  onPressed: () {
 //                          print('Clicked');
-                                  setState(() {
-                                    if (_cServer.text.length > 5) {
-                                       apiUrl = Uri.parse("http://" + _cServer.text+ ":8558/custom");
-                                      _visible = !_visible;
-                                    }
-                                    print(apiUrl.toString());
-                                  });
-                                },
+                                    setState(() {
+                                      if (_cServer.text.length > 5) {
+                                        apiUrl = Uri.parse("http://" +
+                                            _cServer.text +
+                                            ":8558/custom");
+                                        _visible = !_visible;
+                                      }
+                                      print(apiUrl.toString());
+                                    });
+                                  },
+                                ),
                               ),
-                            ),
-
-                          ],
-                        )
-                      ),
+                            ],
+                          )),
                     ),
                   ],
                 ),
@@ -354,7 +364,9 @@ class _MySliderBirdState extends State<MySliderBird> {
                                                   child:
                                                       new Text("Use this link"),
                                                   onPressed: () {
-                                                    if (_c.text.length > 5 && Uri.parse(_c.text).isAbsolute) {
+                                                    if (_c.text.length > 5 &&
+                                                        Uri.parse(_c.text)
+                                                            .isAbsolute) {
                                                       _urlPicture =
                                                           new StringBuffer(
                                                               _c.text);
@@ -645,39 +657,6 @@ class _MySliderBirdState extends State<MySliderBird> {
         });
   }
 
-//  Widget _decideImage({Uint8List base = null}) {
-//    if (_base64 != null)
-//      return Container(
-//          padding: EdgeInsets.all(16.0),
-//          child: Container(
-//            height: 400,
-//            width: double.infinity,
-//            child: PhotoView(
-//              imageProvider: new Image.memory(
-//                _base64,
-//                width: 400,
-//                height: 400,
-//              ).image,
-//            ),
-//          ));
-//    if (_imageFile == null) {
-//      return Text("Your image here");
-//    }
-//    return Container(
-//        padding: EdgeInsets.all(16.0),
-//        child: Container(
-//          height: 300,
-//          width: double.infinity,
-//          decoration: BoxDecoration(
-//            gradient: LinearGradient(
-//                begin: Alignment.topRight,
-//                end: Alignment.bottomLeft,
-//                colors: [Colors.grey, Colors.lightBlue]),
-//            borderRadius: BorderRadius.circular(10.0),
-//            image: DecorationImage(image: FileImage(_imageFile)),
-//          ),
-//        ));
-//  }
   Widget _decideImage({Uint8List base = null, BuildContext context}) {
     if (_base64 != null)
       return PhotoView(
