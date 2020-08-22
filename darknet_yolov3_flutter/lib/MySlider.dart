@@ -14,8 +14,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'assets.dart';
 import 'package:dropdown_search/dropdown_search.dart';
-
-import 'network.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class MySliderBird extends StatefulWidget {
   @override
@@ -26,7 +25,7 @@ class _MySliderBirdState extends State<MySliderBird> {
   final List<String> images = birdImg;
   final List<String> contentImgs = birdInfor;
   final List<String> name = birdName;
-
+  bool _visible = true;
   List<BirdObject> _BirdObject;
   StringBuffer _urlPicture;
   final Color color1 = Color.fromRGBO(252, 119, 3, 1);
@@ -40,14 +39,14 @@ class _MySliderBirdState extends State<MySliderBird> {
   Uint8List _base64;
   bool hasSolution;
   Uri apiUrl = Uri.parse(mIP + "custom");
+
 //  Uri apiUrl = Uri.parse(mIP + "detection");
   TextEditingController numberController = new TextEditingController();
 
-  void intiForSignDetails() {
+  void intiForbirdDetails() {
     _BirdObject = new List<BirdObject>();
-    for (int i = 0; i < images.length; i++){
+    for (int i = 0; i < images.length; i++) {
       _BirdObject.add(new BirdObject(i, name[i], images[i], contentImgs[i]));
-
     }
   }
 
@@ -56,7 +55,7 @@ class _MySliderBirdState extends State<MySliderBird> {
     _indexObjectDetected = new List<int>();
     _controller = new SwiperController();
     hasSolution = false;
-    intiForSignDetails();
+    intiForbirdDetails();
     pr = new ProgressDialog(context, type: ProgressDialogType.Normal);
 
     //Optional
@@ -143,7 +142,8 @@ class _MySliderBirdState extends State<MySliderBird> {
                       bottomRight: Radius.circular(10.0))),
               child: ListTile(
                 title: Text(_BirdObject[_indexObjectDetected[index]].mName),
-                subtitle: Text(_BirdObject[_indexObjectDetected[index]].mContent),
+                subtitle:
+                    Text(_BirdObject[_indexObjectDetected[index]].mContent),
               ),
             ),
           ),
@@ -177,7 +177,7 @@ class _MySliderBirdState extends State<MySliderBird> {
       itemWidth: 300,
 //      controller: _controller,
       fade: 0.5,
-      pagination: new SwiperPagination(),
+//      pagination: new SwiperPagination(),
     );
 //    ]);
   }
@@ -207,6 +207,8 @@ class _MySliderBirdState extends State<MySliderBird> {
   @override
   Widget build(BuildContext context) {
     _c = new TextEditingController();
+    TextEditingController _cServer = new TextEditingController()
+      ..text = "192.168.";
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -224,6 +226,80 @@ class _MySliderBirdState extends State<MySliderBird> {
                           colors: [color1, color2],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight)),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 25),
+                      child: FloatingActionButton(
+                        foregroundColor: Colors.black54,
+                        backgroundColor: Colors.yellow[600],
+                        elevation: 2.0,
+                        child: Icon(Icons.settings_remote),
+                        onPressed: () {
+//                          print('Clicked');
+                          setState(() {
+                            _visible = !_visible;
+                          });
+                        },
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 15, left: 10),
+                      child: AnimatedOpacity(
+                          // If the widget is visible, animate to 0.0 (invisible).
+                          // If the widget is hidden, animate to 1.0 (fully visible).
+                          opacity: _visible ? 1.0 : 0.0,
+                          duration: Duration(milliseconds: 500),
+                          // The green box must be a child of the AnimatedOpacity widget.
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 200.0,
+                                height: 50.0,
+                                color: Colors.white,
+                                child: TextField(
+                                  textInputAction: TextInputAction.go,
+                                  decoration: new InputDecoration(
+                                      hintText: "API Address"),
+                                  controller: _cServer,
+                                  onSubmitted: (value) {
+                                    setState(() {
+                                      if (_cServer.text.length > 5) {
+                                        apiUrl = Uri.parse("http://" +
+                                            _cServer.text +
+                                            ":8558/custom");
+                                        _visible = !_visible;
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(left: 10),
+                                child: FloatingActionButton(
+                                  foregroundColor: Colors.black54,
+                                  backgroundColor: Colors.yellow[600],
+                                  elevation: 2.0,
+                                  child: Icon(FontAwesomeIcons.arrowRight),
+                                  onPressed: () {
+//                          print('Clicked');
+                                    setState(() {
+                                      if (_cServer.text.length > 5) {
+                                        apiUrl = Uri.parse("http://" +
+                                            _cServer.text +
+                                            ":8558/custom");
+                                        _visible = !_visible;
+                                      }
+                                      print(apiUrl.toString());
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          )),
+                    ),
+                  ],
                 ),
                 Container(
                     margin: const EdgeInsets.only(top: 80),
@@ -283,20 +359,39 @@ class _MySliderBirdState extends State<MySliderBird> {
                                                           hintText:
                                                               "Image url"),
                                                   controller: _c,
-                                                ),
-                                                new FlatButton(
-                                                  child:
-                                                      new Text("Use this link"),
-                                                  onPressed: () {
+                                                  onSubmitted: (value) {
                                                     setState(() {
-                                                      if (_c.text.length > 10) {
+                                                      if (_c.text.length > 5 &&
+                                                          Uri.parse(_c.text)
+                                                              .isAbsolute) {
                                                         _urlPicture =
                                                             new StringBuffer(
                                                                 _c.text);
                                                         _base64 = null;
                                                         _imageFile = null;
+                                                        hasSolution = false;
                                                       }
+                                                      Navigator.pop(context);
                                                     });
+                                                  },
+                                                ),
+                                                new FlatButton(
+                                                  child:
+                                                      new Text("Use this link"),
+                                                  color: Colors.lightBlueAccent,
+                                                  padding: EdgeInsets.all(10.0),
+                                                  onPressed: () {
+                                                    if (_c.text.length > 5 &&
+                                                        Uri.parse(_c.text)
+                                                            .isAbsolute) {
+                                                      _urlPicture =
+                                                          new StringBuffer(
+                                                              _c.text);
+                                                      _base64 = null;
+                                                      _imageFile = null;
+                                                      hasSolution = false;
+                                                    }
+                                                    setState(() {});
                                                     Navigator.pop(context);
                                                   },
                                                 )
@@ -367,7 +462,6 @@ class _MySliderBirdState extends State<MySliderBird> {
                 maxHeight: 300,
                 items: _BirdObject,
                 onChanged: (BirdObject d) {
-                  print(d.index);
                   _controller.move(d.index);
                 },
                 showSearchBox: true,
@@ -450,18 +544,16 @@ class _MySliderBirdState extends State<MySliderBird> {
     setState(() {
       pr.show();
     });
-    Uri uriUrl = Uri.parse(mIP + '/url');
-    final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
+    Uri uriUrl = Uri.parse(apiUrl.toString() + '/url');
 
-    Map<String, String> map1 = {'url': imgUrl};
-    imageUploadRequest.headers.addAll(map1);
+    final imageUploadRequest = http.MultipartRequest('POST', uriUrl);
+    imageUploadRequest.fields['url'] = imgUrl;
+    print(imageUploadRequest.fields.toString());
     final http.StreamedResponse response = await imageUploadRequest.send();
     print(response.headers);
     print('statusCode => ${response.statusCode}');
     print('Header: ');
-//     listen for response
-//    List<String> contentHeader = response.headers.values.toList();
-//    print('At new url : ');
+
     if (response.statusCode >= 400) {
       setState(() {
         pr.hide();
@@ -475,11 +567,18 @@ class _MySliderBirdState extends State<MySliderBird> {
       List<int> listObject =
           response.headers['listindex'].split(',').map(int.parse).toList();
       _indexObjectDetected = listObject;
-//      for (int x in listObject) print(x);
       hasSolution = true;
       setState(() {});
     } else {
       _indexObjectDetected = new List<int>();
+      Fluttertoast.showToast(
+          msg: "No object detected",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.blueAccent,
+          textColor: Colors.white,
+          fontSize: 16.0);
     }
 
     await response.stream.toBytes().then((value) {
@@ -525,11 +624,17 @@ class _MySliderBirdState extends State<MySliderBird> {
       _indexObjectDetected = listObject;
       for (int x in listObject) print(x);
       hasSolution = true;
-      setState(() {
-
-      });
+      setState(() {});
     } else {
       _indexObjectDetected = new List<int>();
+      Fluttertoast.showToast(
+          msg: "No object detected",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.blueAccent,
+          textColor: Colors.white,
+          fontSize: 16.0);
     }
 
     await response.stream.toBytes().then((value) {
@@ -569,39 +674,6 @@ class _MySliderBirdState extends State<MySliderBird> {
         });
   }
 
-//  Widget _decideImage({Uint8List base = null}) {
-//    if (_base64 != null)
-//      return Container(
-//          padding: EdgeInsets.all(16.0),
-//          child: Container(
-//            height: 400,
-//            width: double.infinity,
-//            child: PhotoView(
-//              imageProvider: new Image.memory(
-//                _base64,
-//                width: 400,
-//                height: 400,
-//              ).image,
-//            ),
-//          ));
-//    if (_imageFile == null) {
-//      return Text("Your image here");
-//    }
-//    return Container(
-//        padding: EdgeInsets.all(16.0),
-//        child: Container(
-//          height: 300,
-//          width: double.infinity,
-//          decoration: BoxDecoration(
-//            gradient: LinearGradient(
-//                begin: Alignment.topRight,
-//                end: Alignment.bottomLeft,
-//                colors: [Colors.grey, Colors.lightBlue]),
-//            borderRadius: BorderRadius.circular(10.0),
-//            image: DecorationImage(image: FileImage(_imageFile)),
-//          ),
-//        ));
-//  }
   Widget _decideImage({Uint8List base = null, BuildContext context}) {
     if (_base64 != null)
       return PhotoView(
@@ -646,10 +718,10 @@ class _MySliderBirdState extends State<MySliderBird> {
     String filter = filterz.toLowerCase();
     if (filter.length == 0) return _BirdObject;
     List<BirdObject> res = new List<BirdObject>();
-    for (BirdObject signDetail in _BirdObject) {
-      if (signDetail.mName.toLowerCase().contains(filter) ||
-          signDetail.mContent.toLowerCase().contains(filter))
-        res.add(signDetail);
+    for (BirdObject birdDetail in _BirdObject) {
+      if (birdDetail.mName.toLowerCase().contains(filter) ||
+          birdDetail.mContent.toLowerCase().contains(filter))
+        res.add(birdDetail);
     }
     return res;
   }

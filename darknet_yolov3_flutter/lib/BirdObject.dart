@@ -6,10 +6,10 @@ class BirdObject{
   BirdObject(this.index,this.mName,this.mLink, this.mContent);
   bool isEqual(BirdObject model) {
     print('is equal object');
-    return this?.mName.contains(model?.mName) || this?.mContent.contains(model?.mContent);
+    return this?.mName.toLowerCase().contains(model?.mName.toLowerCase()) || this?.mContent.toLowerCase().contains(model?.mContent.toLowerCase());
   }
   bool isFiltered(String s){
-    return mContent.contains(s);
+    return mContent.toLowerCase().contains(s.toLowerCase());
   }
   @override
   String toString() {

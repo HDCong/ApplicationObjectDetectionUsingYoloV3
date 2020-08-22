@@ -19,7 +19,7 @@ class _FancyBottomBarPageState extends State<FancyBottomBarPage> {
   PageController pageController = PageController(initialPage: 0);
   StreamController<int> indexcontroller = StreamController<int>.broadcast();
   int index = 0;
-
+  StringBuffer urlServer =new StringBuffer("");
   @override
   Widget build(BuildContext context) {
     return Scaffold(
