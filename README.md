@@ -25,11 +25,11 @@ Two kind of detection:
 
 
 ### Images
-![alt text](../resource/Picture1.png)
-![](../resource/Picture2.png)
-![](../resource/Picture3.png)
-![](../resource/Picture4.png)
-![](../resource/Picture5.png)
+![alt text](https://github.com/HDCong/application_object_detection_using_yolov3/blob/master/resource/Picture1.png)
+![](https://github.com/HDCong/application_object_detection_using_yolov3/blob/master/resource/Picture2.png)
+![](https://github.com/HDCong/application_object_detection_using_yolov3/blob/master/resource/Picture3.png)
+![](https://github.com/HDCong/application_object_detection_using_yolov3/blob/master/resource/Picture4.png)
+![](https://github.com/HDCong/application_object_detection_using_yolov3/blob/master/resource/Picture5.png)
 
-![](../resource/Picture6.png)
-![](../resource/Picture7.png)
+![](https://github.com/HDCong/application_object_detection_using_yolov3/blob/master/resource/Picture6.png)
+![](https://github.com/HDCong/application_object_detection_using_yolov3/blob/master/resource/Picture7.png)
