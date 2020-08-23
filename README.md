@@ -25,11 +25,11 @@ Two kind of detection:
 
 
 ### Images
-![alt text](../ApplicationObjectDetectionUsingYoloV3/resource/Picture1.png)
-![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture2.png)
-![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture3.png)
-![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture4.png)
-![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture5.png)
+![alt text](../resource/Picture1.png)
+![](../resource/Picture2.png)
+![](../resource/Picture3.png)
+![](../resource/Picture4.png)
+![](../resource/Picture5.png)
 
-![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture6.png)
-![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture7.png)
+![](../resource/Picture6.png)
+![](../resource/Picture7.png)
