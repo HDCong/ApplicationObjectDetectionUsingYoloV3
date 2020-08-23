@@ -76,6 +76,7 @@ def predict(image,net,layer,label,default_colors):
             (x, y) = (boxes[i][0], boxes[i][1])
             (w, h) = (boxes[i][2], boxes[i][3])
             text = "{}: {:.4f}".format(label[classIDs[i]], confidences[i])
+            print(text)
             bb.add(image,x,y,x+w,y+h,text,default_colors[classIDs[i]])
 
     listClassne =','.join([str(n) for n in classIDs])

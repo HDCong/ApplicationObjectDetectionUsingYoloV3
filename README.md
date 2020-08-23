@@ -4,7 +4,32 @@
 
 Use flask to create server
 Needed files (can be downloaded from [pjreddie](https://pjreddie.com/darknet/yolo/)):
-- yolov3.weights
-- yolov3.cfg
-- coco.names : Label file
+- weights file
+- cfg file
+- Label file
   
+## Client part: Darknet YOLOv3
+
+### Flutter mobile application:
+
+Functional: 
+
+- Detect object via local image
+- Detect object via url image
+
+Two kind of detection:
+- Detect object with model get from [pjreddie](https://pjreddie.com/darknet/yolo/)
+- Detect bird with custom model (include 7 classes) .
+  - [Get file model here](https://drive.google.com/file/d/1vDDJ2JTBIxJO7TlvbYXIDyhMqZw7Bdzf/view)
+  - [Get file config here](https://drive.google.com/file/d/1eshRDz27u9b-Z-vzgL5LznQlkJuK5zNy/view)
+
+
+### Images
+![alt text](../ApplicationObjectDetectionUsingYoloV3/resource/Picture1.png)
+![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture2.png)
+![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture3.png)
+![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture4.png)
+![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture5.png)
+
+![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture6.png)
+![](../ApplicationObjectDetectionUsingYoloV3/resource/Picture7.png)
